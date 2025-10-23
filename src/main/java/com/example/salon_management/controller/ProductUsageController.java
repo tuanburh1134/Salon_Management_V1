@@ -63,6 +63,36 @@ public class ProductUsageController {
 
         return "productusage/list"; //  Trỏ đúng folder template
     }
+    // ======================== CREATE ========================
+    @GetMapping("/create")
+    public String createForm(Model model) {
+        model.addAttribute("form", new ProductUsageForm());
+        model.addAttribute("pageTitle", "Thêm sản phẩm sử dụng");
+        model.addAttribute("formAction", "/productusage/create");
+        model.addAttribute("submitLabel", "Lưu mới");
+        model.addAttribute("isEdit", false);
+        return "productusage/form";
+    }
+
+    @PostMapping("/create")
+    public String create(@Valid @ModelAttribute("form") ProductUsageForm form,
+                         BindingResult br,
+                         RedirectAttributes ra,
+                         Model model) {
+
+        if (br.hasErrors()) {
+            model.addAttribute("pageTitle", "Thêm sản phẩm sử dụng");
+            model.addAttribute("formAction", "/productusage/create");
+            model.addAttribute("submitLabel", "Lưu mới");
+            model.addAttribute("isEdit", false);
+            return "productusage/form";
+        }
+
+        service.create(form);
+        ra.addFlashAttribute("msg", "Đã thêm sản phẩm sử dụng mới!");
+        return "redirect:/productusage";
+    }
+
     // ======================== Helpers ========================
     private String buildListUrl(String q, int page, int size, String sortBy, String dir) {
         String query = (q == null || q.isBlank()) ? "" : q.trim().replace(" ", "%20");
