@@ -129,6 +129,12 @@ public class ProductUsageController {
         ra.addFlashAttribute("msg", "Đã cập nhật sản phẩm!");
         return "redirect:/productusage";
     }
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id, RedirectAttributes ra) {
+        service.delete(id);
+        ra.addFlashAttribute("msg", "Đã xoá sản phẩm!");
+        return "redirect:/productusage";
+    }
     // ======================== Helpers ========================
     private String buildListUrl(String q, int page, int size, String sortBy, String dir) {
         String query = (q == null || q.isBlank()) ? "" : q.trim().replace(" ", "%20");
