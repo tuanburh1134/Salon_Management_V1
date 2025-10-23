@@ -29,4 +29,19 @@ public class EmployeeController {
         model.addAttribute("pageTitle", "Danh sách nhân viên");
         return "employee/list";
     }
+    @GetMapping("/create")
+    public String createForm(Model model) {
+        model.addAttribute("employee", new Employee());
+        model.addAttribute("pageTitle", "Thêm nhân viên mới");
+        model.addAttribute("formAction", "/employees/create");
+        return "employee/form";
+    }
+
+    @PostMapping("/create")
+    public String create(@Valid @ModelAttribute("employee") Employee e, BindingResult br, RedirectAttributes ra) {
+        if (br.hasErrors()) return "employee/form";
+        service.create(e);
+        ra.addFlashAttribute("msg", "Thêm nhân viên thành công!");
+        return "redirect:/employees";
+    }
 }
