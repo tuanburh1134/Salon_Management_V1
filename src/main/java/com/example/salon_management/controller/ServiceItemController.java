@@ -1,4 +1,4 @@
-package example.salon_management.controller;
+package com.example.salon_management.controller;
 
 public class ServiceItemController {
 }
