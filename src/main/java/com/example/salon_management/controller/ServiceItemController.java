@@ -71,6 +71,36 @@ public class ServiceItemController {
         ra.addFlashAttribute("msg", "Đã thêm dịch vụ thành công!");
         return "redirect:/services";
     }
+
+    // ========================= EDIT =========================
+    @GetMapping("/{id}/edit")
+    public String editForm(@PathVariable Long id, Model model) {
+        var s = service.findById(id).orElseThrow(); // có thể thay bằng custom NotFound nếu muốn
+        prepareForm(model,
+                ServiceItemRequest.from(s),
+                "Cập nhật dịch vụ",
+                "/services/" + id + "/edit",
+                "Cập nhật");
+        model.addAttribute("id", id); // nếu view cần id hiển thị/khác
+        return "serviceitem/form";
+    }
+
+    @PostMapping("/{id}/edit")
+    public String editSubmit(@PathVariable Long id,
+                             @Valid @ModelAttribute("form") ServiceItemRequest form,
+                             BindingResult br,
+                             Model model,
+                             RedirectAttributes ra) {
+        if (br.hasErrors()) {
+            prepareForm(model, form, "Cập nhật dịch vụ", "/services/" + id + "/edit", "Cập nhật");
+            model.addAttribute("id", id);
+            return "serviceitem/form";
+        }
+        service.update(id, form);
+        ra.addFlashAttribute("msg", "Đã cập nhật dịch vụ");
+        return "redirect:/services";
+    }
+
     // ========================= Helpers =========================
     private void prepareForm(Model model,
                              ServiceItemRequest form,
