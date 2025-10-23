@@ -14,7 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/productusage")
+@RequestMapping("/productusage") // ✅ Giữ nguyên không có dấu gạch
 public class ProductUsageController {
 
     private final ProductUsageService service;
@@ -63,6 +63,7 @@ public class ProductUsageController {
 
         return "productusage/list"; //  Trỏ đúng folder template
     }
+
     // ======================== CREATE ========================
     @GetMapping("/create")
     public String createForm(Model model) {
@@ -93,6 +94,53 @@ public class ProductUsageController {
         return "redirect:/productusage";
     }
 
+    // ======================== EDIT ========================
+    @GetMapping("/{id}/edit")
+    public String editForm(@PathVariable Long id, Model model) {
+        ProductUsage p = service.get(id);
+        ProductUsageForm f = new ProductUsageForm();
+        f.setServiceCode(p.getServiceCode());
+        f.setProductName(p.getProductName());
+        f.setQuantityUsed(p.getQuantityUsed());
+        f.setPrice(p.getPrice());
+
+        model.addAttribute("form", f);
+        model.addAttribute("pageTitle", "Chỉnh sửa sản phẩm sử dụng");
+        model.addAttribute("formAction", "/productusage/" + id + "/edit");
+        model.addAttribute("submitLabel", "Cập nhật");
+        model.addAttribute("isEdit", true);
+
+        return "productusage/form";
+    }
+
+    @PostMapping("/{id}/edit")
+    public String update(@PathVariable Long id,
+                         @Valid @ModelAttribute("form") ProductUsageForm form,
+                         BindingResult br,
+                         RedirectAttributes ra,
+                         Model model) {
+
+        if (br.hasErrors()) {
+            model.addAttribute("pageTitle", "Chỉnh sửa sản phẩm sử dụng");
+            model.addAttribute("formAction", "/productusage/" + id + "/edit");
+            model.addAttribute("submitLabel", "Cập nhật");
+            model.addAttribute("isEdit", true);
+            return "productusage/form";
+        }
+
+        service.update(id, form);
+        ra.addFlashAttribute("msg", "Đã cập nhật sản phẩm!");
+        return "redirect:/productusage";
+    }
+
+    // ======================== DELETE ========================
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id, RedirectAttributes ra) {
+        service.delete(id);
+        ra.addFlashAttribute("msg", "Đã xoá sản phẩm!");
+        return "redirect:/productusage";
+    }
+
     // ======================== Helpers ========================
     private String buildListUrl(String q, int page, int size, String sortBy, String dir) {
         String query = (q == null || q.isBlank()) ? "" : q.trim().replace(" ", "%20");
@@ -102,9 +150,9 @@ public class ProductUsageController {
                 "&sortBy=" + sortBy +
                 "&dir=" + dir;
     }
+
     private String icon(String currentSortBy, String dir, String column) {
         if (!column.equals(currentSortBy)) return "";
         return "asc".equalsIgnoreCase(dir) ? "↑" : "↓";
     }
 }
-
