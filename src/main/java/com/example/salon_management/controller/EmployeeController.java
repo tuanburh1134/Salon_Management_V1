@@ -29,6 +29,7 @@ public class EmployeeController {
         model.addAttribute("pageTitle", "Danh sách nhân viên");
         return "employee/list";
     }
+
     @GetMapping("/create")
     public String createForm(Model model) {
         model.addAttribute("employee", new Employee());
