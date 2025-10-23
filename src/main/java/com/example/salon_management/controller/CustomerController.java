@@ -53,6 +53,7 @@ public class CustomerController {
 
         return "customer/list";
     }
+
     // Helpers
     private String buildUrl(String q, int page, int size, String sortBy, String dir) {
         String kw = (q == null || q.isBlank()) ? "" : q.trim().replace(" ", "%20");
