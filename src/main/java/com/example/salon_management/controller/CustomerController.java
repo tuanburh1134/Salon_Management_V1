@@ -53,6 +53,32 @@ public class CustomerController {
 
         return "customer/list";
     }
+    // CREATE
+    @GetMapping("/create")
+    public String createForm(Model model) {
+        model.addAttribute("form", new CustomerForm());
+        model.addAttribute("pageTitle", "Thêm khách hàng");
+        model.addAttribute("formAction", "/customers/create");
+        model.addAttribute("submitLabel", "Lưu mới");
+        model.addAttribute("isEdit", false);
+        return "customer/form";
+    }
+
+    @PostMapping("/create")
+    public String create(@Valid @ModelAttribute("form") CustomerForm form,
+                         BindingResult br, RedirectAttributes ra, Model model) {
+        if (br.hasErrors()) {
+            model.addAttribute("pageTitle", "Thêm khách hàng");
+            model.addAttribute("formAction", "/customers/create");
+            model.addAttribute("submitLabel", "Lưu mới");
+            model.addAttribute("isEdit", false);
+            return "customer/form";
+        }
+        service.create(form);
+        ra.addFlashAttribute("msg", "Đã thêm khách hàng mới!");
+        return "redirect:/customers";
+    }
+
     // Helpers
     private String buildUrl(String q, int page, int size, String sortBy, String dir) {
         String kw = (q == null || q.isBlank()) ? "" : q.trim().replace(" ", "%20");
