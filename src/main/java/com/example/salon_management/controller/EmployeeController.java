@@ -1,4 +1,32 @@
-package example.salon_management.controller;
+package com.example.salon_management.controller;
 
+import com.example.salon_management.dto.EmployeeSearchRequest;
+import com.example.salon_management.entity.Employee;
+import com.example.salon_management.service.EmployeeService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+@RequestMapping("/employees")
+@RequiredArgsConstructor
 public class EmployeeController {
+
+    private final EmployeeService service;
+
+    @GetMapping
+    public String list(@ModelAttribute("q") EmployeeSearchRequest q, Model model) {
+        Pageable pageable = PageRequest.of(q.getPage(), q.getSize(), q.getSort());
+        Page<Employee> data = service.search(q.getKeyword(), pageable);
+
+        model.addAttribute("data", data);
+        model.addAttribute("q", q);
+        model.addAttribute("pageTitle", "Danh sách nhân viên");
+        return "employee/list";
+    }
 }
