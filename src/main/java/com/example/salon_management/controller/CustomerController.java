@@ -78,6 +78,40 @@ public class CustomerController {
         ra.addFlashAttribute("msg", "Đã thêm khách hàng mới!");
         return "redirect:/customers";
     }
+    // EDIT
+    @GetMapping("/{id}/edit")
+    public String editForm(@PathVariable Long id, Model model) {
+        var c = service.get(id);
+        CustomerForm f = new CustomerForm();
+        f.setName(c.getName());
+        f.setPhone(c.getPhone());
+        f.setEmail(c.getEmail());
+        f.setMemberType(c.getMemberType());
+        f.setPoint(c.getPoint());
+
+        model.addAttribute("form", f);
+        model.addAttribute("pageTitle", "Chỉnh sửa khách hàng");
+        model.addAttribute("formAction", "/customers/" + id + "/edit");
+        model.addAttribute("submitLabel", "Cập nhật");
+        model.addAttribute("isEdit", true);
+        return "customer/form";
+    }
+
+    @PostMapping("/{id}/edit")
+    public String update(@PathVariable Long id,
+                         @Valid @ModelAttribute("form") CustomerForm form,
+                         BindingResult br, RedirectAttributes ra, Model model) {
+        if (br.hasErrors()) {
+            model.addAttribute("pageTitle", "Chỉnh sửa khách hàng");
+            model.addAttribute("formAction", "/customers/" + id + "/edit");
+            model.addAttribute("submitLabel", "Cập nhật");
+            model.addAttribute("isEdit", true);
+            return "customer/form";
+        }
+        service.update(id, form);
+        ra.addFlashAttribute("msg", "Đã cập nhật khách hàng!");
+        return "redirect:/customers";
+    }
 
     // Helpers
     private String buildUrl(String q, int page, int size, String sortBy, String dir) {
