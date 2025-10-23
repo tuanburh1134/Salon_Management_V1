@@ -101,6 +101,13 @@ public class ServiceItemController {
         return "redirect:/services";
     }
 
+    // ========================= DELETE =========================
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id, RedirectAttributes ra) {
+        service.delete(id);
+        ra.addFlashAttribute("msg", "Đã xóa dịch vụ");
+        return "redirect:/services";
+    }
     // ========================= Helpers =========================
     private void prepareForm(Model model,
                              ServiceItemRequest form,
