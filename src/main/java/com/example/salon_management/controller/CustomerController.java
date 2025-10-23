@@ -112,6 +112,13 @@ public class CustomerController {
         ra.addFlashAttribute("msg", "Đã cập nhật khách hàng!");
         return "redirect:/customers";
     }
+    // DELETE
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id, RedirectAttributes ra) {
+        service.delete(id);
+        ra.addFlashAttribute("msg", "Đã xoá khách hàng!");
+        return "redirect:/customers";
+    }
 
     // Helpers
     private String buildUrl(String q, int page, int size, String sortBy, String dir) {
