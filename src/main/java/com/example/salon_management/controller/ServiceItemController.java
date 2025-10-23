@@ -47,6 +47,30 @@ public class ServiceItemController {
         model.addAttribute("q", q);
         return "serviceitem/list";
     }
+    // ========================= CREATE =========================
+    @GetMapping("/create")
+    public String createForm(Model model) {
+        prepareForm(model,
+                new ServiceItemRequest(),
+                "Thêm dịch vụ",
+                "/services/create",
+                "Lưu");
+        return "serviceitem/form";
+    }
+
+    @PostMapping("/create")
+    public String createSubmit(@Valid @ModelAttribute("form") ServiceItemRequest form,
+                               BindingResult br,
+                               Model model,
+                               RedirectAttributes ra) {
+        if (br.hasErrors()) {
+            prepareForm(model, form, "Thêm dịch vụ", "/services/create", "Lưu");
+            return "serviceitem/form";
+        }
+        service.create(form);
+        ra.addFlashAttribute("msg", "Đã thêm dịch vụ thành công!");
+        return "redirect:/services";
+    }
     // ========================= Helpers =========================
     private void prepareForm(Model model,
                              ServiceItemRequest form,
