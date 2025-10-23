@@ -1,4 +1,4 @@
-package com.example.duan2salon.entity;
+package com.example.salon_management.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
