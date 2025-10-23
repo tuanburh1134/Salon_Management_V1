@@ -44,4 +44,20 @@ public class EmployeeController {
         ra.addFlashAttribute("msg", "Thêm nhân viên thành công!");
         return "redirect:/employees";
     }
+    @GetMapping("/{id}/edit")
+    public String editForm(@PathVariable Long id, Model model) {
+        model.addAttribute("employee", service.get(id));
+        model.addAttribute("pageTitle", "Chỉnh sửa nhân viên");
+        model.addAttribute("formAction", "/employees/" + id + "/edit");
+        return "employee/form";
+    }
+
+    @PostMapping("/{id}/edit")
+    public String update(@PathVariable Long id, @Valid @ModelAttribute("employee") Employee e,
+                         BindingResult br, RedirectAttributes ra) {
+        if (br.hasErrors()) return "employee/form";
+        service.update(id, e);
+        ra.addFlashAttribute("msg", "Cập nhật nhân viên thành công!");
+        return "redirect:/employees";
+    }
 }
