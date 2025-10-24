@@ -2,67 +2,231 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/common :: head">
     <title>Khách hàng</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: linear-gradient(135deg, #1b1b1b, #232323);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 10px 0;
+            color: #bbb;
+            font-size: 0.9rem;
+            background: #111;
+            border-top: 1px solid #333;
+        }
+
+        /* Tiêu đề */
+        h3 {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h3 i {
+            font-size: 1.9rem;
+            color: #ffffff !important;
+        }
+
+        /* Ô tìm kiếm */
+        .card-search {
+            background-color: #2b2b2b;
+            border-radius: 12px;
+            border: none;
+            padding: 1rem 1.2rem;
+        }
+
+        .form-control {
+            background-color: #fff;
+            border-radius: 8px;
+            height: 45px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #8e2de2, #4a00e0);
+            border: none;
+            color: #fff;
+            height: 45px;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-outline-secondary {
+            color: #333;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            height: 45px;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        .btn-success {
+            background-color: #007bff;
+            border: none;
+            height: 45px;
+            color: #fff;
+        }
+
+        .btn-icon {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Bảng */
+        .table {
+            background-color: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table thead {
+            background-color: #1f1f1f;
+            color: #fff;
+        }
+
+        .table td, .table th {
+            vertical-align: middle;
+        }
+
+        /* Nút hành động */
+        .btn-warning {
+            background-color: #ffde59;
+            color: #000;
+            border: none;
+        }
+
+        .btn-danger {
+            background-color: #ff4d4d;
+            border: none;
+        }
+
+        .page-link {
+            color: #4a00e0;
+        }
+
+        .form-label {
+            color: #ffffff;
+        }
+
+        .text-muted {
+            color: #ccc !important;
+        }
+    </style>
 </head>
+
 <body>
 <nav th:replace="fragments/common :: navigation"></nav>
-<div class="container py-3">
+
+<main class="container py-4">
+
+    <!-- Tiêu đề + nút thêm -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">Khách hàng</h3>
-        <a class="btn btn-primary" th:href="@{/customers/create}">+ Thêm mới</a>
+        <h3><i class="bi bi-person-fill"></i> Quản lý khách hàng</h3>
+        <a class="btn btn-primary btn-icon" th:href="@{/customers/create}">
+            <i class="bi bi-person-plus-fill"></i><span>Thêm mới</span>
+        </a>
     </div>
 
-    <form class="row g-2 mb-3" th:action="@{/customers}" method="get">
-        <div class="col-sm-6 col-md-5">
-            <input class="form-control" type="text" name="q" placeholder="Tìm theo Tên / SĐT / Email" th:value="${q}">
-        </div>
-        <input type="hidden" name="sortBy" th:value="${sortBy}">
-        <input type="hidden" name="dir" th:value="${dir}">
-        <div class="col-auto">
-            <button class="btn btn-outline-secondary" type="submit">Tìm</button>
-        </div>
-    </form>
+    <!-- Ô tìm kiếm -->
+    <div class="card card-search mb-4 shadow-sm">
+        <form th:action="@{/customers}" method="get" class="d-flex flex-wrap align-items-center gap-2">
+            <div class="flex-grow-1">
+                <label class="form-label mb-1">Từ khóa</label>
+                <input class="form-control" type="text" name="q"
+                       placeholder="Tìm theo Tên / SĐT / Email" th:value="${q}">
+            </div>
+            <input type="hidden" name="sortBy" th:value="${sortBy}">
+            <input type="hidden" name="dir" th:value="${dir}">
+            <div class="d-flex align-items-center gap-2 mt-3 mt-md-4">
+                <button class="btn btn-primary btn-icon px-3" type="submit">
+                    <span>Tìm</span>
+                </button>
+                <a th:href="@{/customers}" class="btn btn-outline-secondary btn-icon px-3">
+                    <span>Clear</span>
+                </a>
+            </div>
+        </form>
+    </div>
 
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
+    <!-- Bảng danh sách -->
+    <div class="table-responsive shadow-sm">
+        <table class="table align-middle text-center">
             <thead>
             <tr>
-                <th><a th:href="${sortByNameUrl}" class="text-decoration-none">Tên</a></th>
+                <th>STT</th>
+                <th><a th:href="${sortByNameUrl}" class="text-decoration-none text-white">Tên khách hàng</a></th>
                 <th>SĐT</th>
                 <th>Email</th>
                 <th>Loại thành viên</th>
                 <th class="text-end">
-                    <a th:href="${sortByPointUrl}" class="text-decoration-none">Điểm</a>
+                    <a th:href="${sortByPointUrl}" class="text-decoration-none text-white">Điểm</a>
                 </th>
                 <th class="text-center" style="width:160px;">Hành động</th>
             </tr>
             </thead>
             <tbody>
-            <tr th:each="c : ${data.content}">
+            <tr th:each="c, iStat : ${data.content}">
+                <td th:text="${iStat.index + 1 + data.number * data.size}"></td>
                 <td th:text="${c.name}"></td>
                 <td th:text="${c.phone}"></td>
                 <td th:text="${c.email}"></td>
                 <td th:text="${c.memberType}"></td>
                 <td class="text-end" th:text="${c.point}"></td>
                 <td class="text-center">
-                    <div class="btn-group btn-group-sm">
-                        <a class="btn btn-outline-primary" th:href="@{|/customers/${c.id}/edit|}">Sửa</a>
+                    <div class="d-flex justify-content-center gap-2">
+
+                        <!-- Form xoá có giữ tham số tìm kiếm -->
                         <form th:action="@{|/customers/${c.id}/delete|}" method="post"
-                              onsubmit="return confirm('Xác nhận xoá?');">
+                              onsubmit="return confirm('Xác nhận xoá khách hàng này?');">
                             <input type="hidden" th:if="${_csrf != null}"
                                    th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            <button class="btn btn-outline-danger" type="submit">Xoá</button>
+                            <input type="hidden" name="q" th:value="${q}">
+                            <input type="hidden" name="page" th:value="${currentPage - 1}">
+                            <input type="hidden" name="sortBy" th:value="${sortBy}">
+                            <input type="hidden" name="dir" th:value="${dir}">
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-warning btn-sm btn-icon" th:href="@{|/customers/${c.id}/edit|}">
+                                    <i class="bi bi-pencil-square"></i><span>Sửa</span>
+                                </a>
+                                <button class="btn btn-danger btn-sm btn-icon" type="submit">
+                                    <i class="bi bi-trash"></i><span>Xóa</span>
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </td>
             </tr>
+
             <tr th:if="${data.totalElements == 0}">
-                <td colspan="6" class="text-center text-muted">Không có dữ liệu</td>
+                <td colspan="7" class="text-center text-muted py-3">Không có dữ liệu</td>
             </tr>
             </tbody>
         </table>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center" th:if="${totalPages > 1}">
+    <!-- Phân trang -->
+    <div class="d-flex justify-content-between align-items-center mt-3" th:if="${totalPages > 1}">
         <div class="text-muted">Trang [[${currentPage}]] / [[${totalPages}]]</div>
         <nav>
             <ul class="pagination mb-0">
@@ -75,9 +239,12 @@
             </ul>
         </nav>
     </div>
-</div>
+</main>
 
-<footer th:replace="fragments/common :: footer"></footer>
+<footer>
+    © 2025 Salon Management — Thiết kế bởi Nhóm DevOps | Liên hệ: support@salon.vn
+</footer>
+
 <div th:replace="fragments/common :: scripts"></div>
 </body>
 </html>

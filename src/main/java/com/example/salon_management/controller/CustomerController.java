@@ -12,6 +12,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/customers")
@@ -53,6 +56,7 @@ public class CustomerController {
 
         return "customer/list";
     }
+
     // CREATE
     @GetMapping("/create")
     public String createForm(Model model) {
@@ -78,6 +82,7 @@ public class CustomerController {
         ra.addFlashAttribute("msg", "Đã thêm khách hàng mới!");
         return "redirect:/customers";
     }
+
     // EDIT
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
@@ -112,12 +117,23 @@ public class CustomerController {
         ra.addFlashAttribute("msg", "Đã cập nhật khách hàng!");
         return "redirect:/customers";
     }
-    // DELETE
+
+    // DELETE (⚡️ Đã sửa lại để giữ nguyên trạng thái tìm kiếm)
     @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Long id, RedirectAttributes ra) {
+    public String delete(@PathVariable Long id,
+                         @RequestParam Map<String, String> params,
+                         RedirectAttributes ra) {
         service.delete(id);
         ra.addFlashAttribute("msg", "Đã xoá khách hàng!");
-        return "redirect:/customers";
+
+        // Xây lại URL redirect, giữ lại các query params (q, page, sortBy, dir)
+        String query = params.entrySet().stream()
+                .filter(e -> !e.getKey().equals("_csrf")) // bỏ csrf
+                .filter(e -> !e.getKey().equals("id"))     // bỏ id
+                .map(e -> e.getKey() + "=" + e.getValue())
+                .collect(Collectors.joining("&"));
+
+        return "redirect:/customers" + (query.isEmpty() ? "" : "?" + query);
     }
 
     // Helpers
