@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <img src="images/anh1.jpg"
+    <img src="static/home.jpg"
          alt="Background"
          style="
         position: fixed;
@@ -18,8 +18,9 @@
         height: 10px;
         object-fit: cover;
         object-position: center;
-        z-index: -2;
+        z-index: -1;
      ">
+    <header th:replace="fragments/common :: header"></header>
     <style>
         /* ================= GLOBAL STYLE ================= */
         html, body {
@@ -40,17 +41,7 @@
         }
 
         /* Hiệu ứng ánh sáng chuyển động */
-        .light-effect {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 150%;
-            height: 150%;
-            background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.2), transparent 40%),
-            radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.2), transparent 50%);
-            animation: moveLight 12s infinite alternate ease-in-out;
-            z-index: 1;
-        }
+
 
         @keyframes moveLight {
             0% { transform: translate(0, 0) scale(1); }
@@ -68,6 +59,23 @@
             padding: 3rem 2rem;
             box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
             transition: all 0.4s ease;
+        }
+        .content-box { position: relative; overflow: hidden; }
+        .light-effect{
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 120%; height: 120%;
+            transform: translate(-50%,-50%);   /* gốc luôn ở giữa khung */
+            background:
+                    radial-gradient(circle at 30% 30%, rgba(255,255,255,.25), transparent 60%),
+                    radial-gradient(circle at 70% 70%, rgba(255,215,0,.2), transparent 60%);
+            pointer-events: none;
+            z-index: 1;
+            animation: drift 8s ease-in-out infinite alternate;
+        }
+        @keyframes drift{
+            0%   { transform: translate(-50%,-50%) scale(1); }
+            100% { transform: translate(calc(-50% + 20px), calc(-50% - 20px)) scale(1.05); }
         }
 
         .content-box:hover {
@@ -139,12 +147,9 @@
 </head>
 
 <body>
-<!-- ✅ Navbar chỉ hiển thị logo -->
-<nav th:replace="fragments/common :: navigation"></nav>
-
 <!-- Hiệu ứng nền -->
-<div class="overlay"></div>
-<div class="light-effect"></div>
+<div class="overlay light-effect">
+
 
 <!-- Nội dung chính -->
 <div class="container py-5 text-center content-box mt-5 animate__animated animate__fadeInUp">
@@ -170,7 +175,7 @@
 
     </div>
 </div>
-
+</div>
 <!--  Footer luôn sát chân -->
 <footer th:replace="fragments/common :: footer"></footer>
 <div th:replace="fragments/common :: scripts"></div>
