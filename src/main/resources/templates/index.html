@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/common :: head">
+<head th:replace="~{fragments/common :: head}">
     <title>Salon Demo</title>
 
     <!-- Font & Animate CSS -->
@@ -140,7 +140,7 @@
 
 <body>
 <!-- ✅ Navbar chỉ hiển thị logo -->
-<nav th:replace="fragments/common :: navigation"></nav>
+<nav th:replace="~{fragments/common :: navigation}"></nav>
 
 <!-- Hiệu ứng nền -->
 <div class="overlay"></div>
@@ -168,11 +168,22 @@
             <i class="fa-solid fa-user-group me-2"></i> Quản lý khách hàng
         </a>
 
+        <!-- ✅ BỔ SUNG THEO YÊU CẦU -->
+        <a class="btn btn-outline-info shadow" th:href="@{/promotions}">
+            <i class="fa-solid fa-tags me-2"></i> Khuyến mãi
+        </a>
+        <a class="btn btn-outline-secondary shadow" th:href="@{/bookings}">
+            <i class="fa-solid fa-calendar-check me-2"></i> Đặt lịch
+        </a>
+        <a class="btn btn-outline-primary shadow" th:href="@{/payments}">
+            <i class="fa-solid fa-credit-card me-2"></i> Thanh toán
+        </a>
+        <!-- 🔚 BỔ SUNG -->
     </div>
 </div>
 
 <!--  Footer luôn sát chân -->
-<footer th:replace="fragments/common :: footer"></footer>
-<div th:replace="fragments/common :: scripts"></div>
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<div th:replace="~{fragments/common :: scripts}"></div>
 </body>
 </html>
