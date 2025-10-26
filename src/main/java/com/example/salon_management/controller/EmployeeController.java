@@ -29,6 +29,7 @@ public class EmployeeController {
         model.addAttribute("pageTitle", "Danh sách nhân viên");
         return "employee/list";
     }
+
     @GetMapping("/create")
     public String createForm(Model model) {
         model.addAttribute("employee", new Employee());
@@ -44,6 +45,7 @@ public class EmployeeController {
         ra.addFlashAttribute("msg", "Thêm nhân viên thành công!");
         return "redirect:/employees";
     }
+
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
         model.addAttribute("employee", service.get(id));
@@ -58,6 +60,13 @@ public class EmployeeController {
         if (br.hasErrors()) return "employee/form";
         service.update(id, e);
         ra.addFlashAttribute("msg", "Cập nhật nhân viên thành công!");
+        return "redirect:/employees";
+    }
+
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id, RedirectAttributes ra) {
+        service.delete(id);
+        ra.addFlashAttribute("msg", "Đã xoá nhân viên!");
         return "redirect:/employees";
     }
 }

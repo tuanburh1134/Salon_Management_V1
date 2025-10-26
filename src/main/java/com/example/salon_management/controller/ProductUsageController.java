@@ -92,7 +92,49 @@ public class ProductUsageController {
         ra.addFlashAttribute("msg", "Đã thêm sản phẩm sử dụng mới!");
         return "redirect:/productusage";
     }
+    @GetMapping("/{id}/edit")
+    public String editForm(@PathVariable Long id, Model model) {
+        ProductUsage p = service.get(id);
+        ProductUsageForm f = new ProductUsageForm();
+        f.setServiceCode(p.getServiceCode());
+        f.setProductName(p.getProductName());
+        f.setQuantityUsed(p.getQuantityUsed());
+        f.setPrice(p.getPrice());
 
+        model.addAttribute("form", f);
+        model.addAttribute("pageTitle", "Chỉnh sửa sản phẩm sử dụng");
+        model.addAttribute("formAction", "/productusage/" + id + "/edit");
+        model.addAttribute("submitLabel", "Cập nhật");
+        model.addAttribute("isEdit", true);
+
+        return "productusage/form";
+    }
+
+    @PostMapping("/{id}/edit")
+    public String update(@PathVariable Long id,
+                         @Valid @ModelAttribute("form") ProductUsageForm form,
+                         BindingResult br,
+                         RedirectAttributes ra,
+                         Model model) {
+
+        if (br.hasErrors()) {
+            model.addAttribute("pageTitle", "Chỉnh sửa sản phẩm sử dụng");
+            model.addAttribute("formAction", "/productusage/" + id + "/edit");
+            model.addAttribute("submitLabel", "Cập nhật");
+            model.addAttribute("isEdit", true);
+            return "productusage/form";
+        }
+
+        service.update(id, form);
+        ra.addFlashAttribute("msg", "Đã cập nhật sản phẩm!");
+        return "redirect:/productusage";
+    }
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id, RedirectAttributes ra) {
+        service.delete(id);
+        ra.addFlashAttribute("msg", "Đã xoá sản phẩm!");
+        return "redirect:/productusage";
+    }
     // ======================== Helpers ========================
     private String buildListUrl(String q, int page, int size, String sortBy, String dir) {
         String query = (q == null || q.isBlank()) ? "" : q.trim().replace(" ", "%20");
