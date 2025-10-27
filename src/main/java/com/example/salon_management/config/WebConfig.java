@@ -19,7 +19,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceHandler("/uploads/**")
                 .addResourceLocations("file:uploads/");
     }
-}
+
     @Override
     public void addFormatters(FormatterRegistry registry) {
         // Converter for LocalDateTime to String (for datetime-local input)
@@ -39,4 +39,3 @@ public class WebConfig implements WebMvcConfigurer {
         });
     }
 }
-

@@ -1,178 +1,256 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
-<!-- ====================== HEAD ====================== -->
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<body>
 <th:block th:fragment="head">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${title} ?: 'Salon'">Salon</title>
-
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
-    <!-- Font Awesome (nếu cần) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        /* Reset */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --brand: #6f42c1; /* tím đặc trưng */
+            --brand-2: #8b5cf6; /* tím sáng hơn */
+            --gold: #ffd700; /* vàng ánh kim */
+            --text: #ffffff;
+            --muted: #adb5bd;
+            --footer-h: 56px; /* chiều cao footer để chèn khoảng trống cho body */
+        }
 
-        /* Header */
-        .home__header { background-color: #d3d3d3; z-index: 1000; position: relative; }
-        .home__logo-img { height: 64px; width: auto; }
+        /* Reset & base */
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background:
+                    radial-gradient(60rem 60rem at 110% -10%, rgba(255,215,0,.18), transparent 60%),
+                    radial-gradient(50rem 50rem at -10% 110%, rgba(139,92,246,.18), transparent 65%),
+                    linear-gradient(135deg, #1f1f22 0%, #2b3035 100%);
+            background-attachment: fixed;
+            background-size: cover;
+            overflow-x: hidden;
+            padding-bottom: var(--footer-h);
+        }
 
-        /* Sidebar (Menu trái) */
-        .menu {
-            width: 250px;
-            background-color: #d3d3d3;
-            padding: 1rem;
-            margin: 10px;
-            height: 100vh;
+        /* Navbar */
+        .navbar .nav-link {
+            position: relative;
+            color: #e8e8e8;
+            font-weight: 500;
+            padding: .6rem 1.2rem;
             border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            transition: width 0.3s ease;
+            transition: all .3s ease;
+            text-align: center;
+            overflow: hidden;
         }
-        .menu-items {
+
+        .navbar .nav-link::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #8b5cf6, #facc15, #8b5cf6);
+            background-size: 300%;
+            border-radius: 10px;
+            z-index: -1;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform .4s ease, background-position 1.5s ease;
+        }
+
+        .navbar .nav-link:hover::before {
+            transform: scaleX(1);
+            transform-origin: left;
+            background-position: 100%;
+        }
+
+        .navbar .nav-link:hover {
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(139,92,246,.3), 0 0 15px rgba(255,215,0,.2);
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        .navbar .nav-link.active {
+            color: #fff !important;
+            font-weight: 600;
+            background: linear-gradient(135deg, rgba(139,92,246,.35), rgba(255,215,0,.25));
+            box-shadow: 0 4px 14px rgba(139,92,246,.5), inset 0 0 12px rgba(255,255,255,.1);
+        }
+
+        .navbar-nav {
             display: flex;
-            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            width: 100%;
+            gap: 1rem;
+        }
+
+        .navbar .container {
+            display: flex;
             justify-content: space-between;
-            height: 100%;
+            align-items: center;
         }
-        .menu a {
+
+        .page-header {
+            background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.1));
+            color: #fff;
+            padding: 24px 0;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+
+        .btn-salon {
+            background: linear-gradient(135deg, var(--brand), var(--brand-2));
+            color: #fff;
+            border: none;
+            box-shadow: 0 6px 16px rgba(111,66,193,.35);
+            transition: transform .15s ease, box-shadow .15s ease, opacity .2s ease;
+        }
+
+        .btn-salon:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(111,66,193,.45);
+            opacity: .95;
+            color: #fff;
+        }
+
+        .service-image {
+            width: 72px;
+            height: 72px;
+            object-fit: cover;
+            border-radius: 12px;
+            background: #f8f9fa;
+            border: 1px solid rgba(0,0,0,.06);
+        }
+
+        .price { white-space: nowrap; }
+
+        footer {
+            height: var(--footer-h);
             display: flex;
             align-items: center;
-            gap: .5rem;
-            padding: 0.5rem 0.75rem;
-            color: #333;
-            text-decoration: none;
-            border-radius: 0.4rem;
-            margin-bottom: 0.25rem;
-            transition: background .2s ease, color .2s ease;
-        }
-        .menu a:hover { background-color: #e9ecef; color: #0d6efd; }
-        .menu a.active { background-color: #0d6efd; color: #fff; }
-
-        /* Sidebar thu gọn */
-        .menu.collapsed { width: 70px; }
-        .menu.collapsed a span { display: none; }
-
-        /* Nội dung chính */
-        .main__content {
-            flex: 1;
-            padding: 1rem;
-            background-color: #fff;
-            overflow-y: auto;
-            min-height: calc(100vh - 120px);
+            justify-content: center;
+            background: linear-gradient(90deg, rgba(0,0,0,.65), rgba(0,0,0,.5));
+            backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(255,255,255,.08);
+            box-shadow: 0 -8px 20px rgba(0,0,0,.35);
+            color: #d0d0d0;
+            margin-top: auto;
+            width: 100%;
         }
 
-        /* Button tuỳ biến */
-        .btn-custom { background-color: #6c63ff; border: none; padding: 8px 16px; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; margin-right: 10px; }
-        .btn-custom.complete { background-color: #4caf50; }
-        .btn-group { margin-top: 24px; margin-bottom: 40px; }
+        html, body { height: 100%; display: flex; flex-direction: column; }
+        main { flex: 1 0 auto; }
+        footer { flex-shrink: 0; width: 100%; }
+        body { padding-bottom: 0 !important; }
+        footer { margin-top: auto !important; }
 
-        /* Lưới tính năng */
-        .feature-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; }
-        .feature-item { flex: 1 1 calc(25% - 15px); text-align: center; cursor: pointer; color: #4caf50; }
-        .feature-item .icon { font-size: 24px; margin-bottom: 6px; }
+        @media (max-width: 991.98px) {
+            .navbar .nav-link { margin-top: .25rem; }
+        }
 
-        /* Footer */
-        .footer__home { background-color: #d3d3d3; text-align: center; padding: 15px 0; color: #000; }
+        @media (max-width: 575.98px) {
+            .navbar-brand { font-size: 1rem; }
+            :root { --footer-h: 64px; }
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #c3e6cb;
+            position: relative;
+            transition: opacity 0.3s ease; /* Hiệu ứng mờ dần trong 0.3s */
+        }
 
-        /* ---------- FORCE VISIBLE (bật lại tất cả khi bị rule khác ẩn) ---------- */
-        /* Header/Sidebar/Footer luôn hiển thị */
-        .home__header,
-        .menu,
-        .menu-items,
-        .footer__home { display: block !important; visibility: visible !important; opacity: 1 !important; }
+        .alert-success.hide {
+            opacity: 0; /* Ẩn dần khi có lớp hide */
+        }
 
-        /* Nhãn menu hiển thị mặc định */
-        .menu a span { display: inline !important; }
-        /* Nhưng vẫn hỗ trợ thu gọn khi có .collapsed */
-        .menu.collapsed a span { display: none !important; }
+        .alert-success .btn-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        /* Custom Modal Styling */
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
 
-        /* Section trong trang (nếu dùng) mặc định hiển thị */
-        .content-section { display: block !important; }
+        .modal-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
 
-        /* Nếu từng có rule .navbar-nav{display:none!important;} ở nơi khác → vô hiệu hoá ở đây */
-        .navbar-nav { display: flex !important; }
+        .modal-title {
+            font-weight: 600;
+            color: #343a40;
+        }
+
+        .modal-footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+
+        .modal-body strong {
+            color: var(--brand, #6f42c1); /* Sử dụng màu tím đặc trưng của bạn */
+        }
+        /* Ẩn mũi tên tăng/giảm (spinners) trên input type="number" */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield; /* Dành cho Firefox */
+        }
     </style>
 </th:block>
 
-<!-- ====================== HEADER ====================== -->
-<th:block th:fragment="header">
-    <header class="home__header d-flex justify-content-between align-items-center p-3">
-        <div class="d-flex align-items-center">
-            <img th:src="@{/anh/logo.png}" alt="Logo" class="home__logo-img me-3"/>
-            <div>
-                <strong>Hệ thống quản lý chấm công</strong>
-                <p class="mb-0">Chào mừng bạn đến với hệ thống</p>
+<th:block th:fragment="navigation">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/}">
+                <i class="fa-solid fa-scissors me-2"></i>Salon
+            </a>
+            <div class="navbar-nav">
+                <a class="nav-link"
+                   th:href="@{/services}"
+                   th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/services')} ? ' active'">
+                    <i class="fa-solid fa-list me-1"></i>Dịch vụ
+                </a>
+                <a class="nav-link"
+                   th:href="@{/productusage}"
+                   th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/productusage')} ? ' active'">
+                    <i class="fa-solid fa-box me-1"></i>Sản phẩm sử dụng
+                </a>
+                <a class="nav-link"
+                   th:href="@{/employees}"
+                   th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/employees')} ? ' active'">
+                    <i class="fa-solid fa-user-tie me-1"></i>Nhân viên
+                </a>
+                <a class="nav-link"
+                   th:href="@{/customers}"
+                   th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/customers')} ? ' active'">
+                    <i class="fa-solid fa-user-group me-1"></i>Khách hàng
+                </a>
             </div>
         </div>
-    </header>
+    </nav>
 </th:block>
 
-<!-- ====================== NAV (Sidebar) ====================== -->
-<th:block th:fragment="navigation">
-    <div class="home d-flex flex-column min-vh-100"
-         th:with="uri=${#httpServletRequest != null} ? ${#httpServletRequest.requestURI} : ''">
-        <div class="d-flex flex-grow-1">
-            <nav class="menu" id="menubar">
-                <div class="menu-items flex-column justify-content-between h-100">
-                    <div>
-                        <a href="javascript:void(0)" id="toggleSidebarBtn" class="btn btn-light mb-3">
-                            <i class="bi bi-list"></i> <span>Menu</span>
-                        </a>
-
-                        <a th:href="@{/}" th:classappend="${uri == '/'} ? ' active' : ''">
-                            <i class="bi bi-house-door"></i><span>Trang chủ</span>
-                        </a>
-
-                        <a th:href="@{/services}" th:classappend="${#strings.startsWith(uri, '/services')} ? ' active' : ''">
-                            <i class="bi bi-person-check"></i><span>Dịch vụ</span>
-                        </a>
-
-                        <a th:href="@{/productusage}" th:classappend="${#strings.startsWith(uri, '/productusage')} ? ' active' : ''">
-                            <i class="bi bi-people-fill"></i><span>Sản phẩm sử dụng</span>
-                        </a>
-
-                        <a th:href="@{/employees}" th:classappend="${#strings.startsWith(uri, '/employees')} ? ' active' : ''">
-                            <i class="bi bi-clock-history"></i><span>Nhân viên</span>
-                        </a>
-
-                        <a th:href="@{/customers}" th:classappend="${#strings.startsWith(uri, '/customers')} ? ' active' : ''">
-                            <i class="bi bi-gear"></i><span>Khách hàng</span>
-                        </a>
-
-                        <a th:href="@{/bookings}" th:classappend="${#strings.startsWith(uri, '/bookings')} ? ' active' : ''">
-                            <i class="bi bi-calendar-check"></i><span>Đặt lịch</span>
-                        </a>
-
-                        <a th:href="@{/promotions}" th:classappend="${#strings.startsWith(uri, '/promotions')} ? ' active' : ''">
-                            <i class="bi bi-gift"></i><span>Khuyến mãi</span>
-                        </a>
-
-                        <a th:href="@{/payments}" th:classappend="${#strings.startsWith(uri, '/payments')} ? ' active' : ''">
-                            <i class="bi bi-credit-card-2-front"></i><span>Thanh toán</span>
-                        </a>
-                    </div>
-
-                    <div class="mt-auto pt-3 border-top">
-                        <a th:href="@{/logout}" class="text-danger fw-semibold">
-                            <i class="bi bi-box-arrow-right me-2"></i><span>Đăng xuất</span>
-                        </a>
-                    </div>
-                </div>
-            </nav>
-            <!-- <div class="main__content">...</div> -->
-        </div>
-    </div>
-</th:block>
-
-<!-- ====================== FLASH ====================== -->
 <th:block th:fragment="flash">
     <div class="container mt-3" th:if="${msg}">
         <div class="alert-success" role="alert">
@@ -183,73 +261,41 @@
     </div>
 </th:block>
 
-<!-- ====================== FOOTER ====================== -->
 <th:block th:fragment="footer">
-    <footer class="footer__home">
-        &copy; 2025 Hệ thống chấm công. Mọi quyền được bảo lưu.
+    <footer class="border-top py-3 mt-4">
+        <div class="container text-muted small">©
+            <span th:text="${#dates.format(#dates.createNow(),'yyyy')}">2025</span> Salon Demo
+        </div>
     </footer>
 </th:block>
 
-<!-- ====================== SCRIPTS ====================== -->
 <th:block th:fragment="scripts">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Sidebar toggle
-            const toggleBtn = document.getElementById('toggleSidebarBtn');
-            const menu = document.getElementById('menubar');
-            if (toggleBtn && menu) {
-                toggleBtn.addEventListener('click', () => menu.classList.toggle('collapsed'));
-            }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tìm phần tử thông báo thành công
+            const successAlert = document.querySelector('.alert-success');
 
-            // Tabs nội bộ (nếu trang có content-section)
-            const menuLinks = document.querySelectorAll('.menu-items a[data-target]');
-            if (menuLinks && menuLinks.length > 0) {
-                menuLinks.forEach((link) => {
-                    link.addEventListener('click', (e) => {
-                        if (link.getAttribute('href') === '#' || link.dataset.target) {
-                            e.preventDefault();
-                            menuLinks.forEach((l) => l.classList.remove('active'));
-                            link.classList.add('active');
-                            document.querySelectorAll('.content-section').forEach((sec) => sec.style.display = 'none');
-                            const target = document.getElementById(link.dataset.target);
-                            if (target) target.style.display = 'block';
+            // Nếu phần tử này tồn tại trên trang
+            if (successAlert) {
+                // Bắt đầu đếm ngược 3 giây (3000 mili giây)
+                setTimeout(() => {
+                    // Thêm class 'hide' để kích hoạt hiệu ứng mờ dần trong CSS
+                    successAlert.classList.add('hide');
+
+                    // Sau khi hiệu ứng mờ dần kết thúc (300ms), ẩn hoàn toàn phần tử
+                    // để nó không chiếm không gian trên trang
+                    setTimeout(() => {
+                        if (successAlert.parentElement) {
+                            successAlert.parentElement.style.display = 'none';
                         }
-                    });
-                });
+                    }, 300); // Thời gian này phải khớp với transition trong CSS
+
+                }, 3000); // 3 giây
             }
-
-            // sortBy hỗ trợ cả trang có form q lẫn querystring
-            window.sortBy = function (field) {
-                const f = document.getElementById('searchForm');
-                if (f) {
-                    const sortByInput = f.querySelector('input[name="sortBy"]');
-                    const dirInput = f.querySelector('input[name="dir"]');
-                    const pageInput = f.querySelector('input[name="page"]');
-
-                    const curField = (sortByInput && sortByInput.value) ? sortByInput.value : 'name';
-                    const curDir = (dirInput && dirInput.value ? dirInput.value : 'asc').toLowerCase();
-                    const nextDir = (curField === field && curDir === 'asc') ? 'desc' : 'asc';
-
-                    if (sortByInput) sortByInput.value = field;
-                    if (dirInput) dirInput.value = nextDir;
-                    if (pageInput) pageInput.value = 0;
-
-                    f.submit();
-                } else {
-                    const params = new URLSearchParams(window.location.search);
-                    const curField2 = params.get('sortBy') || 'name';
-                    const curDir2 = (params.get('dir') || 'asc').toLowerCase();
-                    const nextDir2 = (curField2 === field && curDir2 === 'asc') ? 'desc' : 'asc';
-                    params.set('sortBy', field);
-                    params.set('dir', nextDir2);
-                    params.set('page', '0');
-                    window.location.href = window.location.pathname + '?' + params.toString();
-                }
-            };
         });
     </script>
 </th:block>
-
+</body>
 </html>
