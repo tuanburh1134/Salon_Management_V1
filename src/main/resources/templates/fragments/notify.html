@@ -111,39 +111,13 @@
             // ===== Toast success =====
             const toastEl = document.getElementById('globalToast');
             if (toastEl && window.bootstrap) {
-                const url = new URL(window.location.href);
-                const ok = url.searchParams.get('ok'); // created|updated|deleted
-
                 // Lấy flash attributes từ Thymeleaf
-                let mTitle = null;
-                let mMsg = null;
-                
-                // Thử lấy từ flash attributes
-                try {
-                    // Kiểm tra nếu có flash attributes
-                    const successTitleEl = document.querySelector('[data-success-title]');
-                    const successMessageEl = document.querySelector('[data-success-message]');
-                    
-                    if (successTitleEl) mTitle = successTitleEl.getAttribute('data-success-title');
-                    if (successMessageEl) mMsg = successMessageEl.getAttribute('data-success-message');
-                    
-                    // Fallback: thử cách cũ
-                    if (!mTitle) mTitle = /*[[${successTitle}]]*/ null;
-                    if (!mMsg) mMsg = /*[[${successMessage}]]*/ null;
-                } catch (e) {
-                    console.log('Error getting flash attributes:', e);
-                }
-
-                // Fallback theo query param
-                if (!mTitle && ok) {
-                    if (ok === 'created') { mTitle = 'Tạo thành công'; mMsg = 'Bạn đã tạo mới thành công.'; }
-                    if (ok === 'updated') { mTitle = 'Sửa thành công';  mMsg = 'Bạn đã cập nhật thành công.'; }
-                    if (ok === 'deleted') { mTitle = 'Xoá thành công';  mMsg = 'Bạn đã xoá thành công.'; }
-                }
+                let mTitle = /*[[${successTitle}]]*/ null;
+                let mMsg = /*[[${successMessage}]]*/ null;
 
                 if (mTitle || mMsg) {
                     if (mTitle) document.getElementById('toastTitle').textContent = mTitle;
-                    if (mMsg)   document.getElementById('toastMessage').textContent = mMsg;
+                    if (mMsg) document.getElementById('toastMessage').textContent = mMsg;
                     new bootstrap.Toast(toastEl, { delay: 6000, autohide: true }).show();
                 }
             }

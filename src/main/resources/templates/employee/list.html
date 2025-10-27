@@ -256,11 +256,6 @@
 <!-- ===== Include notify fragments ===== -->
 <th:block th:replace="fragments/notify :: confirmModal"></th:block>
 <th:block th:replace="fragments/notify :: toastContainer"></th:block>
-
-<!-- Hidden elements để truyền flash attributes -->
-<div th:if="${successTitle}" data-success-title="[[${successTitle}]]" style="display: none;"></div>
-<div th:if="${successMessage}" data-success-message="[[${successMessage}]]" style="display: none;"></div>
-
 <th:block th:replace="fragments/notify :: notifyScripts"></th:block>
 
 <script>
