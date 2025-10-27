@@ -4,26 +4,28 @@
     <title th:text="${title}">Đặt lịch</title>
 
     <style>
-        /* === Giữ footer luôn ở đáy và không đè lên nội dung === */
-        html, body {
-            height: 100%;
-            margin: 0;
-        }
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            background: #f8f9fa;
-        }
-        main {
-            flex: 1;
-        }
+        /* === Sticky Footer === */
+        html, body { height: 100%; margin: 0; }
+        body { display: flex; flex-direction: column; min-height: 100vh; background: #f8f9fa; }
+        main { flex: 1; }
         footer {
-            margin-top: auto;
-            background: #fff;
-            border-top: 1px solid #dee2e6;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+            margin-top: auto; background: #fff; border-top: 1px solid #dee2e6;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05); text-align: center; padding: 12px 0;
+            position: relative; bottom: 0; width: 100%;
         }
+
+        /* === Style trang === */
+        .page-header{
+            background: linear-gradient(90deg, #6f42c1, #8b5cf6);
+            color:#fff; padding:32px 0; margin-bottom:24px;
+            box-shadow: 0 3px 8px rgba(0,0,0,.1);
+        }
+        .card{ border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); overflow:hidden; }
+        .btn-salon{
+            background: linear-gradient(135deg,#6f42c1,#8b5cf6); color:#fff; border:none; border-radius:8px;
+            box-shadow: 0 4px 12px rgba(111,66,193,.25); transition: all .2s ease;
+        }
+        .btn-salon:hover{ transform: translateY(-1px); box-shadow:0 6px 18px rgba(111,66,193,.35); }
 
         /* === Làm đẹp form === */
         .form-container {
@@ -48,98 +50,143 @@
             border-radius: 8px;
         }
 
-        h3 {
+        h1 {
             font-weight: 700;
-            color: #212529;
+            color: #fff;
         }
     </style>
 </head>
-<body>
-<nav th:replace="fragments/common :: navigation"></nav>
+<body class="d-flex flex-column min-vh-100">
+<!-- Header chung -->
+<header th:replace="fragments/common :: header"></header>
 
-<main>
-    <div class="container py-4">
-        <h3 class="mb-3" th:text="${title}">Thêm đặt lịch</h3>
+<!-- Đặt NAV và MAIN cùng một hàng để không bị đẩy xuống -->
+<div class="d-flex flex-grow-1">
+    <nav th:replace="fragments/common :: navigation"></nav>
 
-        <div class="form-container">
-            <form th:action="@{${actionUrl}}" th:object="${form}" method="post" novalidate>
-
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Khách hàng <span class="text-danger">*</span></label>
-                        <select class="form-select" th:field="*{customerId}">
-                            <option value="">-- Chọn khách hàng --</option>
-                            <option th:each="customer : ${customers}"
-                                    th:value="${customer.id}"
-                                    th:text="${customer.name}"></option>
-                        </select>
-                        <small class="text-danger" th:errors="*{customerId}"></small>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Dịch vụ <span class="text-danger">*</span></label>
-                        <select class="form-select" th:field="*{serviceId}">
-                            <option value="">-- Chọn dịch vụ --</option>
-                            <option th:each="service : ${services}"
-                                    th:value="${service.id}"
-                                    th:text="${service.name + ' - ' + service.type}"></option>
-                        </select>
-                        <small class="text-danger" th:errors="*{serviceId}"></small>
-                    </div>
-                </div>
-
-                <div class="row g-3 mt-2">
-                    <div class="col-md-6">
-                        <label class="form-label">Ngày giờ đặt lịch <span class="text-danger">*</span></label>
-                        <input class="form-control"
-                               th:field="*{bookingDateTime}"
-                               type="datetime-local"
-                               id="bookingDateTime"
-                               min="">
-                        <small class="text-danger" th:errors="*{bookingDateTime}"></small>
-                        <small class="text-muted">Thời gian đặt lịch phải ít nhất 1 giờ trong tương lai</small>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Nhân viên thực hiện <span class="text-danger">*</span></label>
-                        <select class="form-select" th:field="*{employeeId}">
-                            <option value="">-- Chọn nhân viên --</option>
-                            <option th:each="employee : ${employees}"
-                                    th:value="${employee.id}"
-                                    th:text="${employee.name}"></option>
-                        </select>
-                        <small class="text-danger" th:errors="*{employeeId}"></small>
-                    </div>
-                </div>
-
-                <div class="row g-3 mt-2">
-                    <div class="col-md-6">
-                        <label class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                        <select class="form-select" th:field="*{status}">
-                            <option value="Chờ xử lý">Chờ xử lý</option>
-                            <option value="Xác nhận">Xác nhận</option>
-                            <option value="Hoàn thành">Hoàn thành</option>
-                            <option value="Hủy">Hủy</option>
-                        </select>
-                        <small class="text-danger" th:errors="*{status}"></small>
-                    </div>
-                </div>
-
-                <div class="mb-3 mt-3">
-                    <label class="form-label">Ghi chú</label>
-                    <textarea class="form-control" th:field="*{notes}" rows="3"
-                              placeholder="Ghi chú thêm về đặt lịch..."></textarea>
-                </div>
-
-                <div class="d-flex gap-2 mt-4">
-                    <button class="btn btn-primary" type="submit" th:text="${submitLabel}">Lưu</button>
-                    <a class="btn btn-outline-secondary" th:href="@{/bookings}">Hủy</a>
-                </div>
-
-            </form>
+    <main class="flex-fill">
+        <div class="page-header">
+            <div class="container">
+                <h1 class="mb-0"><i class="fa-solid fa-calendar-plus me-2"></i><span th:text="${title}">Thêm đặt lịch</span></h1>
+                <p class="mb-0 mt-2">Quản lý lịch hẹn khách hàng</p>
+            </div>
         </div>
-    </div>
-</main>
+
+        <div class="container">
+
+            <!-- Flash messages -->
+            <div th:if="${msg}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i><span th:text="${msg}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form th:action="@{${actionUrl}}" th:object="${form}" method="post" novalidate>
+
+                        <!-- Mã đặt lịch (chỉ hiển thị khi edit) -->
+                        <div th:if="${form.bookingCode != null and !#strings.isEmpty(form.bookingCode)}" class="mb-3">
+                            <label class="form-label">
+                                Mã đặt lịch
+                            </label>
+                            <input class="form-control" th:value="${form.bookingCode}" readonly disabled>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Khách hàng <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" th:field="*{customerId}">
+                                    <option value="">-- Chọn khách hàng --</option>
+                                    <option th:each="customer : ${customers}"
+                                            th:value="${customer.id}"
+                                            th:text="${customer.name}"></option>
+                                </select>
+                                <small class="text-danger" th:errors="*{customerId}"></small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Dịch vụ <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" th:field="*{serviceId}">
+                                    <option value="">-- Chọn dịch vụ --</option>
+                                    <option th:each="service : ${services}"
+                                            th:value="${service.id}"
+                                            th:text="${service.name + ' - ' + service.type}"></option>
+                                </select>
+                                <small class="text-danger" th:errors="*{serviceId}"></small>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Ngày giờ đặt lịch <span class="text-danger">*</span>
+                                </label>
+                                <input class="form-control"
+                                       th:field="*{bookingDateTime}"
+                                       type="datetime-local"
+                                       id="bookingDateTime"
+                                       min="">
+                                <small class="text-danger" th:errors="*{bookingDateTime}"></small>
+                                <small class="text-muted">Thời gian đặt lịch phải trước 1 tiếng</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Nhân viên thực hiện <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" th:field="*{employeeId}">
+                                    <option value="">-- Chọn nhân viên --</option>
+                                    <option th:each="employee : ${employees}"
+                                            th:value="${employee.id}"
+                                            th:text="${employee.name}"></option>
+                                </select>
+                                <small class="text-danger" th:errors="*{employeeId}"></small>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Trạng thái <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" th:field="*{status}">
+                                    <option value="Chờ xử lý">Chờ xử lý</option>
+                                    <option value="Xác nhận">Xác nhận</option>
+                                    <option value="Hoàn thành">Hoàn thành</option>
+                                    <option value="Hủy">Hủy</option>
+                                </select>
+                                <small class="text-danger" th:errors="*{status}"></small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 mt-3">
+                            <label class="form-label">
+                                Ghi chú
+                            </label>
+                            <textarea class="form-control" th:field="*{notes}" rows="3"
+                                      placeholder="Ghi chú thêm về đặt lịch..."></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button class="btn btn-salon" type="submit" th:text="${submitLabel}">
+                                <i class="fa-solid fa-save me-1"></i>Lưu
+                            </button>
+                            <a class="btn btn-outline-secondary" th:href="@{/bookings}">
+                                <i class="fa-solid fa-times me-1"></i>Hủy
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
 
 <footer th:replace="fragments/common :: footer"></footer>
 <div th:replace="fragments/common :: scripts"></div>

@@ -90,7 +90,7 @@
                                      id="photoPreviewDefault">
                             </div>
                             <input class="form-control" type="file" name="photo" accept="image/*" id="photoInput">
-            </div>
+                        </div>
 
                         <div class="col-md-8">
                             <div class="row g-3">
@@ -98,40 +98,40 @@
                                     <label class="form-label">Họ tên <span class="text-danger">*</span></label>
                                     <input class="form-control" th:field="*{name}" placeholder="VD: Nguyễn Văn A">
                                     <small class="text-danger" th:errors="*{name}"></small>
-                        </div>
+                                </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Ngày sinh <span class="text-danger">*</span></label>
-                                    <input class="form-control" 
-                                           type="date" 
+                                    <input class="form-control"
+                                           type="date"
                                            name="dateOfBirth"
                                            id="dateOfBirth"
                                            th:value="${employee?.dateOfBirth != null ? #temporals.format(employee.dateOfBirth, 'yyyy-MM-dd') : ''}"
-                                           min="1700-01-01" 
+                                           min="1700-01-01"
                                            max="2007-12-31">
                                     <small class="text-danger" th:errors="*{dateOfBirth}"></small>
-                        </div>
+                                </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Quê quán</label>
                                     <input class="form-control" th:field="*{hometown}" placeholder="VD: Hà Nội">
                                     <small class="text-danger" th:errors="*{hometown}"></small>
-                        </div>
+                                </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Email</label>
                                     <input class="form-control" type="email" th:field="*{email}" placeholder="VD: example@email.com">
                                     <small class="text-danger" th:errors="*{email}"></small>
-                        </div>
+                                </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Số điện thoại</label>
                                     <input class="form-control" th:field="*{phone}" placeholder="VD: 0123456789">
                                     <small class="text-danger" th:errors="*{phone}"></small>
+                                </div>
+                            </div>
                         </div>
-                        </div>
-                </div>
-            </div>
+                    </div>
 
                     <hr class="my-4">
 
@@ -168,14 +168,14 @@
                                 <option value="Ca tối">Ca tối</option>
                             </select>
                             <small class="text-danger" th:errors="*{shift}"></small>
-                    </div>
+                        </div>
 
                         <div class="col-md-12">
                             <label class="form-label">Lương (VNĐ) <span class="text-danger">*</span></label>
                             <input class="form-control" type="number" th:field="*{salary}" min="0" step="1000" placeholder="VD: 5000000">
                             <small class="text-danger" th:errors="*{salary}"></small>
-                </div>
-            </div>
+                        </div>
+                    </div>
 
                     <div class="d-flex gap-2 mt-4">
                         <button class="btn btn-primary" type="submit">
@@ -184,7 +184,7 @@
                         <a class="btn btn-outline-secondary" th:href="@{/employees}">
                             <i class="fa-solid fa-times me-1"></i>Hủy
                         </a>
-            </div>
+                    </div>
 
                 </form>
             </div>

@@ -36,5 +36,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Page<Booking> searchBookingsWithStatus(@Param("keyword") String keyword,
                                            @Param("status") String status,
                                            Pageable pageable);
+
+    /**
+     * Find the maximum booking code to generate the next one
+     * @return the highest booking code or null if none exist
+     */
+    @Query("SELECT MAX(b.bookingCode) FROM Booking b WHERE b.bookingCode LIKE 'DL%'")
+    String findMaxBookingCode();
 }
 
