@@ -246,6 +246,12 @@
                    th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/customers')} ? ' active'">
                     <i class="fa-solid fa-user-group me-1"></i>Khách hàng
                 </a>
+
+                <a class="nav-link"
+                   th:href="@{/bookings}"
+                   th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI != null and #httpServletRequest.requestURI.startsWith('/bookings')} ? ' active'">
+                    <i class="fa-solid fa-calendar-check me-1"></i>Đặt lịch
+                </a>
             </div>
         </div>
     </nav>
