@@ -12,12 +12,14 @@ import java.time.format.DateTimeFormatter;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        Path uploadDir = Paths.get("uploads").toAbsolutePath().normalize();
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(uploadDir.toUri().toString());
+        registry
+                .addResourceHandler("/uploads/**")
+                .addResourceLocations("file:uploads/");
     }
+}
     @Override
     public void addFormatters(FormatterRegistry registry) {
         // Converter for LocalDateTime to String (for datetime-local input)
