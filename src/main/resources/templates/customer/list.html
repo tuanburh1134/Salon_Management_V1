@@ -1,71 +1,36 @@
+<!-- templates/customer/list.html -->
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <!-- Import head chung -->
+    <!-- Head chung (bootstrap, fontawesome, meta...) -->
     <th:block th:replace="fragments/common :: head"></th:block>
     <title>Quản lý khách hàng</title>
 
     <style>
-        /* === Sticky Footer === */
-        html, body { height: 100%; margin: 0; }
-        body {
-            display: flex; flex-direction: column;
-            min-height: 100vh; background: #f8f9fa;
-        }
-        main { flex: 1; }
-        footer {
-            margin-top: auto; background: #fff; border-top: 1px solid #dee2e6;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
-            text-align: center; padding: 12px 0;
-            position: relative; bottom: 0; width: 100%;
-        }
-
-        /* === Style trang === */
-        .page-header {
-            background: linear-gradient(90deg, #6f42c1, #8b5cf6);
-            color: #fff; padding: 32px 0; margin-bottom: 24px;
-            box-shadow: 0 3px 8px rgba(0,0,0,.1);
-        }
-        .card {
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,.05);
-            overflow: hidden;
-        }
-        .btn-salon {
-            background: linear-gradient(135deg,#6f42c1,#8b5cf6);
-            color: #fff; border: none; border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(111,66,193,.25);
-            transition: all .2s ease;
-        }
-        .btn-salon:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(111,66,193,.35);
-        }
-        .table thead {
-            background: #343a40;
-            color: #fff;
-        }
-        .badge-type {
-            font-size: 0.85rem;
-            padding: 4px 8px;
-            border-radius: 8px;
-            color: #fff;
-        }
-        .badge-type.MOI { background-color: #6c757d; }
-        .badge-type.THAN_QUEN { background-color: #0d6efd; }
-        .badge-type.DAC_BIET { background-color: #ffc107; color: #000; }
+        /* === Layout & style nhỏ gọn === */
+        html, body { height:100%; margin:0; }
+        body { display:flex; flex-direction:column; min-height:100vh; background:#f8f9fa; }
+        main { flex:1; }
+        .page-header { background: linear-gradient(90deg,#6f42c1,#8b5cf6); color:#fff; padding:32px 0; margin-bottom:24px; }
+        .card { border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); overflow:hidden; }
+        .btn-salon { background: linear-gradient(135deg,#6f42c1,#8b5cf6); color:#fff; border-radius:8px; border:0; }
+        .table thead { background:#343a40; color:#fff; }
+        .badge-type { font-size:.85rem; padding:4px 8px; border-radius:8px; color:#fff; }
+        .badge-type.MOI { background:#6c757d; }
+        .badge-type.THAN_QUEN { background:#0d6efd; }
+        .badge-type.DAC_BIET { background:#ffc107; color:#000; }
+        /* toast vị trí móc ở góc phải (Bootstrap toast position-fixed already) */
     </style>
 </head>
-
 <body class="d-flex flex-column min-vh-100">
+
 <header th:replace="fragments/common :: header"></header>
 
 <div class="d-flex flex-grow-1">
-    <!-- SIDEBAR -->
+    <!-- Sidebar -->
     <nav th:replace="fragments/common :: navigation"></nav>
 
     <main class="flex-fill">
-        <!-- HEADER PAGE -->
         <div class="page-header">
             <div class="container">
                 <h1 class="mb-0"><i class="fa-solid fa-user-group me-2"></i>Quản lý khách hàng</h1>
@@ -74,64 +39,90 @@
         </div>
 
         <div class="container">
-            <!-- Flash message -->
-            <div th:if="${msg}" class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fa-solid fa-circle-check me-2"></i><span th:text="${msg}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+
+            <!-- Toast nhỏ gọn (nếu có msg từ Controller) -->
+            <div th:if="${msg}" id="toastMessage"
+                 class="toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-4 show"
+                 role="alert" aria-live="assertive" aria-atomic="true" style="z-index:1055; min-width:260px;">
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center">
+                        <i class="fa-solid fa-circle-check me-2"></i>
+                        <span th:text="${msg}">Thông báo</span>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
             </div>
 
-            <!-- Bộ lọc -->
-            <div class="card mb-3">
+            <!-- Bộ lọc khách hàng -->
+            <div class="card mb-3 border-0 shadow-sm">
                 <div class="card-body">
-                    <form class="row g-3 align-items-end" th:action="@{/customers}" method="get">
-                        <div class="col-md-6">
-                            <label class="form-label">
-                                <i class="fa-solid fa-magnifying-glass me-1"></i>Từ khóa
+                    <form class="row g-3 align-items-end justify-content-between" th:action="@{/customers}" method="get">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold d-flex align-items-center">
+                                <i class="fa-solid fa-magnifying-glass me-2"></i> Từ khóa
                             </label>
-                            <input class="form-control" name="q" placeholder="Tìm theo Tên / SĐT / Email"
-                                   th:value="${q}">
+                            <input class="form-control" name="q" placeholder="Tìm theo Tên / SĐT / Email" th:value="${q}">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Loại thành viên</label>
-                            <select class="form-select" name="memberType">
-                                <option value="">Tất cả loại</option>
-                                <option th:each="mt : ${memberTypes}" th:value="${mt}" th:text="${mt}"
-                                        th:selected="${mt == memberType}"></option>
-                            </select>
+
+                        <!-- Phần lọc loại + nút tìm + clear -->
+                        <div class="col-md-5 d-flex align-items-end gap-2">
+                            <div class="flex-grow-1">
+                                <label class="form-label fw-semibold">Loại thành viên</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <!-- Dropdown -->
+                                    <select class="form-select" name="memberType">
+                                        <!-- Dòng hiển thị đầu tiên -->
+                                        <option value="" th:selected="${#strings.isEmpty(memberType)}">
+                                            -- Chọn loại thành viên --
+                                        </option>
+
+                                        <!-- Các loại thành viên -->
+                                        <option th:each="mt : ${memberTypes}"
+                                                th:value="${mt}"
+                                                th:text="${(mt == 'MOI' ? 'MỚI' : mt == 'THAN_QUEN' ? 'THÂN QUEN' :'ĐẶC BIỆT')}"
+
+                                        </option>
+                                    </select>
+
+
+                                    <!-- Nút CLEAR (đặt trước) -->
+                                    <a class="btn btn-outline-secondary px-3 d-flex align-items-center justify-content-center"
+                                       th:href="@{/customers}">
+                                        <i class="fa-solid fa-xmark me-1"></i> Clear
+                                    </a>
+
+                                    <!-- Nút TÌM (đặt sau dropdown) -->
+                                    <button class="btn btn-salon px-3 d-flex align-items-center justify-content-center" type="submit">
+                                        <i class="fa-solid fa-search me-1"></i> Tìm
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-1 d-grid">
-                            <button class="btn btn-salon" type="submit">
-                                <i class="fa-solid fa-search me-1"></i>Tìm
-                            </button>
-                        </div>
-                        <div class="col-md-1 d-grid">
-                            <a class="btn btn-outline-secondary" th:href="@{/customers}">
-                                <i class="fa-solid fa-xmark me-1"></i>Clear
-                            </a>
-                        </div>
-                        <div class="col-md-1 d-grid ms-auto">
-                            <a class="btn btn-primary" th:href="@{/customers/create}">
-                                <i class="fa-solid fa-plus me-1"></i>Thêm khách hàng
+
+                        <!-- Nút thêm khách hàng -->
+                        <div class="col-md-2 text-end">
+                            <a class="btn btn-primary w-100" th:href="@{/customers/create}">
+                                <i class="fa-solid fa-plus me-1"></i> Thêm khách hàng
                             </a>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- BẢNG DANH SÁCH KHÁCH HÀNG -->
-            <div class="card">
+            <!-- Bảng -->
+            <div class="card border-0 shadow-sm">
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0 align-middle">
+                        <table class="table table-hover align-middle mb-0">
                             <thead class="table-dark">
                             <tr>
-                                <th style="width:80px">STT</th>
+                                <th style="width:80px">#</th>
                                 <th>Tên khách hàng</th>
                                 <th>SĐT</th>
                                 <th>Email</th>
-                                <th style="width:140px">Loại thành viên</th>
-                                <th class="text-end" style="width:140px">Điểm</th>
-                                <th class="text-end" style="width:170px">Thao tác</th>
+                                <th style="width:150px">Loại thành viên</th>
+                                <th class="text-end" style="width:120px">Điểm</th>
+                                <th class="text-end" style="width:150px">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -142,76 +133,137 @@
                             </tr>
 
                             <tr th:each="c, iter : ${data.content}">
+                                <td><span class="badge bg-secondary" th:text="${data.number * data.size + iter.index + 1}">1</span></td>
+                                <td th:text="${c.name}">Tên</td>
+                                <td th:text="${c.phone}">SĐT</td>
+                                <td th:text="${c.email}">Email</td>
                                 <td>
-                                    <span class="badge bg-secondary"
-                                          th:text="${data.number * data.size + iter.index + 1}">1</span>
+                                    <span class="badge-type" th:classappend="${c.memberType}" th:text="${c.memberType}">MOI</span>
                                 </td>
-                                <td th:text="${c.name}"></td>
-                                <td th:text="${c.phone}"></td>
-                                <td th:text="${c.email}"></td>
-                                <td>
-                                    <span class="badge-type" th:classappend="${c.memberType}" th:text="${c.memberType}"></span>
-                                </td>
-                                <td class="text-end" th:text="${#numbers.formatDecimal(c.point,0,'COMMA',0,'POINT')} + ' điểm'"></td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(c.point,0,'COMMA',0,'POINT')} + ' điểm'">0 điểm</td>
+
+                                <!-- HÀNH ĐỘNG: SỬA + XOÁ -->
                                 <td class="text-end">
-                                    <a class="btn btn-sm btn-outline-warning" th:href="@{|/customers/${c.id}/edit|}">
+                                    <!-- Sửa -->
+                                    <a class="btn btn-sm btn-outline-warning me-1"
+                                       th:href="@{|/customers/${c.id}/edit|}" title="Chỉnh sửa">
                                         <i class="fa-regular fa-pen-to-square"></i>
                                     </a>
-                                    <form th:action="@{|/customers/${c.id}/delete|}" method="post" class="d-inline"
-                                          onsubmit="return confirm('Bạn có chắc chắn muốn xóa khách hàng này?');">
-                                        <input type="hidden" th:if="${_csrf != null}"
-                                               th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                        <button class="btn btn-sm btn-outline-danger" type="submit">
+
+                                    <!-- Xoá: form với button type=button (mở modal). th:data-name = giá trị thực -->
+                                    <form th:action="@{|/customers/${c.id}/delete?q=${q}&memberType=${memberType}&page=${data.number}|}"
+                                          method="post" class="d-inline delete-form">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger delete-btn"
+                                                th:attr="data-id=${c.id}, data-name=${c.name}"
+                                                title="Xóa">
                                             <i class="fa-regular fa-trash-can"></i>
                                         </button>
                                     </form>
                                 </td>
                             </tr>
+
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- PHÂN TRANG -->
-            <div th:if="${data.totalPages > 1}" class="card mt-3">
+            <!-- Phân trang (giữ nguyên cách bạn đang dùng) -->
+            <div th:if="${data.totalPages > 1}" class="card mt-3 border-0 shadow-sm">
                 <div class="card-body">
                     <nav aria-label="pagination">
                         <ul class="pagination justify-content-center mb-0">
                             <li class="page-item" th:classappend="${data.first} ? 'disabled'">
-                                <a class="page-link" th:href="@{/customers(page=0, q=${q}, memberType=${memberType})}">
-                                    <i class="fa-solid fa-angles-left"></i>
-                                </a>
+                                <a class="page-link" th:href="@{/customers(page=0, q=${q}, memberType=${memberType})}"><i class="fa-solid fa-angles-left"></i></a>
                             </li>
                             <li class="page-item" th:classappend="${data.first} ? 'disabled'">
-                                <a class="page-link" th:href="@{/customers(page=${data.number - 1}, q=${q}, memberType=${memberType})}">
-                                    <i class="fa-solid fa-angle-left"></i>
-                                </a>
+                                <a class="page-link" th:href="@{/customers(page=${data.number - 1}, q=${q}, memberType=${memberType})}"><i class="fa-solid fa-angle-left"></i></a>
                             </li>
-                            <li class="page-item" th:each="i : ${#numbers.sequence(0, data.totalPages - 1)}"
-                                th:classappend="${i == data.number} ? 'active'">
-                                <a class="page-link" th:text="${i + 1}"
-                                   th:href="@{/customers(page=${i}, q=${q}, memberType=${memberType})}">1</a>
+
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, data.totalPages - 1)}" th:classappend="${i == data.number} ? 'active'">
+                                <a class="page-link" th:text="${i + 1}" th:href="@{/customers(page=${i}, q=${q}, memberType=${memberType})}">1</a>
+                            </li>
+
+                            <li class="page-item" th:classappend="${data.last} ? 'disabled'">
+                                <a class="page-link" th:href="@{/customers(page=${data.number + 1}, q=${q}, memberType=${memberType})}"><i class="fa-solid fa-angle-right"></i></a>
                             </li>
                             <li class="page-item" th:classappend="${data.last} ? 'disabled'">
-                                <a class="page-link" th:href="@{/customers(page=${data.number + 1}, q=${q}, memberType=${memberType})}">
-                                    <i class="fa-solid fa-angle-right"></i>
-                                </a>
-                            </li>
-                            <li class="page-item" th:classappend="${data.last} ? 'disabled'">
-                                <a class="page-link" th:href="@{/customers(page=${data.totalPages - 1}, q=${q}, memberType=${memberType})}">
-                                    <i class="fa-solid fa-angles-right"></i>
-                                </a>
+                                <a class="page-link" th:href="@{/customers(page=${data.totalPages - 1}, q=${q}, memberType=${memberType})}"><i class="fa-solid fa-angles-right"></i></a>
                             </li>
                         </ul>
                     </nav>
                 </div>
             </div>
+
         </div>
     </main>
 </div>
 
 <footer th:replace="fragments/common :: footer"></footer>
 <div th:replace="fragments/common :: scripts"></div>
+
+<!-- Modal xác nhận xoá -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning bg-opacity-25">
+                <h5 class="modal-title fw-bold text-dark" id="deleteModalLabel">
+                    <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i> Xác nhận xoá khách hàng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteMessage" class="mb-0 text-secondary">
+                    Bạn có chắc chắn muốn xoá khách hàng này? Hành động này <b>không thể hoàn tác</b>.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xoá</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function(){
+        // Toast tự ẩn (3s)
+        const toastEl = document.getElementById('toastMessage');
+        if (toastEl) {
+            setTimeout(() => {
+                // fade out then remove
+                toastEl.classList.remove('show');
+                toastEl.style.transition = 'opacity .4s';
+                toastEl.style.opacity = '0';
+                setTimeout(() => toastEl.remove(), 450);
+            }, 3000);
+        }
+
+        // Modal delete
+        const deleteModalEl = document.getElementById('deleteModal');
+        const bsModal = new bootstrap.Modal(deleteModalEl);
+        let currentForm = null;
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const name = this.getAttribute('data-name') || '...';
+                // đặt nội dung modal
+                const deleteMessage = document.getElementById('deleteMessage');
+                deleteMessage.innerHTML = `Bạn có chắc chắn muốn xoá khách hàng <b>"${name}"</b>?<br>Hành động này <b>không thể hoàn tác</b>.`;
+
+                // lưu form để submit khi xác nhận
+                currentForm = this.closest('form');
+                bsModal.show();
+            });
+        });
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+            if (currentForm) currentForm.submit();
+        });
+    });
+</script>
+
 </body>
 </html>

@@ -76,10 +76,18 @@
 
         <div class="container">
 
-            <!-- Thông báo flash -->
-            <div th:if="${msg}" class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fa-solid fa-circle-check me-2"></i><span th:text="${msg}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <!-- Toast thông báo nhỏ gọn ở góc phải -->
+            <div th:if="${msg}" id="toastMessage"
+                 class="toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-4 show shadow-lg"
+                 role="alert" aria-live="assertive" aria-atomic="true"
+                 style="z-index:1055; min-width:260px;">
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center">
+                        <i class="fa-solid fa-circle-check me-2"></i>
+                        <span th:text="${msg}">Thao tác thành công!</span>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
             </div>
 
             <!-- Bộ lọc -->
@@ -267,7 +275,6 @@
 <script>
     /**
      * sortBy(field) - Sort booking list by field
-     * Updates the search form with new sort parameters and submits
      */
     function sortBy(field) {
         var form = document.getElementById('searchForm');
@@ -281,10 +288,22 @@
 
         sortByInput.value = field;
         dirInput.value = nextDir;
-        pageInput.value = 0; // Reset to first page when sorting
-
+        pageInput.value = 0;
         form.submit();
     }
+
+    document.addEventListener('DOMContentLoaded', function(){
+        // === Toast tự ẩn sau 3 giây ===
+        const toastEl = document.getElementById('toastMessage');
+        if (toastEl) {
+            setTimeout(() => {
+                toastEl.classList.remove('show');
+                toastEl.style.transition = 'opacity .4s';
+                toastEl.style.opacity = '0';
+                setTimeout(() => toastEl.remove(), 450);
+            }, 3000);
+        }
+    });
 </script>
 </body>
 </html>

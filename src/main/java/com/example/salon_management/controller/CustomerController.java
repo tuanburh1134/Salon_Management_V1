@@ -59,7 +59,7 @@ public class CustomerController {
                 ? buildUrl(keyword, memberType, customers.getNumber() + 1, size, sortBy, dir)
                 : null);
 
-        model.addAttribute("memberTypes", new String[]{"", "MOI", "THAN_QUEN", "DAC_BIET"});
+        model.addAttribute("memberTypes", new String[]{"MOI", "THAN_QUEN", "DAC_BIET"});
         model.addAttribute("pageTitle", "Danh sách khách hàng");
 
         return "customer/list";
@@ -81,7 +81,7 @@ public class CustomerController {
         }
 
         service.create(form);
-        ra.addFlashAttribute("msg", "✅ Đã thêm khách hàng mới thành công!");
+        ra.addFlashAttribute("msg", " Đã thêm khách hàng mới thành công!");
         return "redirect:/customers";
     }
 
@@ -116,7 +116,7 @@ public class CustomerController {
 
         try {
             service.update(id, form);
-            ra.addFlashAttribute("msg", "✅ Cập nhật thông tin khách hàng thành công!");
+            ra.addFlashAttribute("msg", " Cập nhật thông tin khách hàng thành công!");
         } catch (RuntimeException e) {
             ra.addFlashAttribute("msg", "⚠️ Cập nhật thất bại: " + e.getMessage());
         }
@@ -135,7 +135,7 @@ public class CustomerController {
                          RedirectAttributes ra) {
         try {
             service.delete(id);
-            ra.addFlashAttribute("msg", "🗑️ Đã xoá khách hàng thành công!");
+            ra.addFlashAttribute("msg", "🗑 Đã xoá khách hàng thành công!");
         } catch (RuntimeException e) {
             ra.addFlashAttribute("msg", "⚠️ Không thể xoá: " + e.getMessage());
         }
