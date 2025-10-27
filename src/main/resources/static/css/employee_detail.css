@@ -1,0 +1,18 @@
+.detail-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.detail-card img {
+    max-width: 200px;
+    border-radius: 8px;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #343a40;
+}
