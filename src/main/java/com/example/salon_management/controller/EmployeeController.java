@@ -17,11 +17,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Controller
@@ -32,6 +35,9 @@ public class EmployeeController {
     private final EmployeeService service;
     // 1. Tiêm EmployeeRepository để kiểm tra trùng lặp
     private final EmployeeRepository repository;
+
+    @Value("${app.upload.dir}")
+    private String uploadDir;
 
     private static final String UPLOAD_DIR = "uploads/";
 
@@ -63,18 +69,17 @@ public class EmployeeController {
         return "employee/form";
     }
 
+    // Dán đoạn code này để THAY THẾ HOÀN TOÀN phương thức create() cũ
     @PostMapping("/create")
     public String create(@Valid @ModelAttribute("employee") Employee e, BindingResult br,
-                         @RequestParam("photo") MultipartFile photo, RedirectAttributes ra, Model model) throws IOException {
+                         @RequestParam("photo") MultipartFile photo, RedirectAttributes ra, Model model) {
 
-        // Kiểm tra các validation cơ bản (@NotBlank, @Min,...)
+        // --- Phần validation (kiểm tra lỗi) giữ nguyên ---
         if (br.hasErrors()) {
             model.addAttribute("pageTitle", "Thêm nhân viên mới");
             model.addAttribute("formAction", "/employees/create");
             return "employee/form";
         }
-
-        // 2. Thêm logic kiểm tra trùng lặp email và SĐT
         if (repository.existsByEmail(e.getEmail())) {
             br.rejectValue("email", "error.employee", "Email này đã được sử dụng.");
         }
@@ -87,27 +92,69 @@ public class EmployeeController {
                 br.rejectValue("dateOfBirth", "error.employee", "Năm sinh phải trong khoảng từ 1700 đến 2007.");
             }
         }
-        // Nếu có lỗi trùng lặp, quay lại form để hiển thị
         if (br.hasErrors()) {
             model.addAttribute("pageTitle", "Thêm nhân viên mới");
             model.addAttribute("formAction", "/employees/create");
             return "employee/form";
         }
 
-        // Xử lý upload ảnh
-        if (!photo.isEmpty()) {
+        // --- BẮT ĐẦU QUÁ TRÌNH DEBUG ---
+        System.out.println("\n\n==================== BẮT ĐẦU DEBUG UPLOAD ====================");
+
+        if (photo != null && !photo.isEmpty()) {
+            // KIỂM TRA 1: File có thực sự được gửi lên không?
+            System.out.println("✅ CHECK 1: File đã được nhận.");
+            System.out.println("   - Tên file gốc: " + photo.getOriginalFilename());
+            System.out.println("   - Kích thước file: " + photo.getSize() + " bytes");
+
             try {
                 String fileName = UUID.randomUUID().toString() + "_" + photo.getOriginalFilename();
-                Path path = Paths.get(UPLOAD_DIR + fileName);
-                Files.createDirectories(path.getParent());
-                Files.write(path, photo.getBytes());
-                e.setPhotoPath(fileName);
+
+                // KIỂM TRA 2: Chương trình đang định lưu file vào đâu?
+                Path uploadPath = Paths.get(uploadDir);
+                Path absolutePath = uploadPath.toAbsolutePath();
+                System.out.println("✅ CHECK 2: Phân tích đường dẫn.");
+                System.out.println("   - Đường dẫn cấu hình (tương đối): '" + uploadDir + "'");
+                System.out.println("   - Đường dẫn đích (tuyệt đối): " + absolutePath);
+
+                // KIỂM TRA 3: Thư mục đích có tồn tại không?
+                if (!Files.exists(absolutePath)) {
+                    System.out.println("   - THÔNG BÁO: Thư mục đích chưa tồn tại. Đang tạo...");
+                    Files.createDirectories(absolutePath);
+                    System.out.println("   - Đã tạo thư mục thành công!");
+                } else {
+                    System.out.println("   - THÔNG BÁO: Thư mục đích đã tồn tại.");
+                }
+
+                // KIỂM TRA 4: Bắt đầu lưu file
+                Path filePath = absolutePath.resolve(fileName);
+                System.out.println("✅ CHECK 4: Chuẩn bị ghi file.");
+                System.out.println("   - Sẽ ghi file vào: " + filePath);
+
+                try (InputStream inputStream = photo.getInputStream()) {
+                    Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+                    e.setPhotoPath(fileName);
+                    System.out.println("   - 🎉 GHI FILE THÀNH CÔNG!");
+                }
             } catch (IOException ex) {
-                ra.addFlashAttribute("msg", "Lỗi khi tải ảnh: " + ex.getMessage());
+                // KIỂM TRA 5: Nếu có lỗi, lỗi đó chính xác là gì?
+                System.err.println("❌ CHECK 5: ĐÃ XẢY RA LỖI NGHIÊM TRỌNG!");
+                System.err.println("   - Chi tiết lỗi:");
+                // Dòng này cực kỳ quan trọng, nó sẽ in ra chi tiết lỗi bằng chữ màu đỏ
+                ex.printStackTrace();
+
+                ra.addFlashAttribute("msg", "Lỗi nghiêm trọng khi tải ảnh lên. Vui lòng kiểm tra Console log.");
+                model.addAttribute("pageTitle", "Thêm nhân viên mới");
+                model.addAttribute("formAction", "/employees/create");
                 return "employee/form";
             }
+        } else {
+            System.out.println("⚠️ Chú ý: Không có file ảnh nào được chọn để upload.");
         }
 
+        System.out.println("==================== KẾT THÚC DEBUG UPLOAD ====================\n\n");
+
+        // Lưu thông tin nhân viên vào DB
         service.create(e);
         ra.addFlashAttribute("msg", "Thêm nhân viên thành công!");
         return "redirect:/employees";
