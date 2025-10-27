@@ -10,46 +10,5 @@ import java.util.List;
 
 public interface CustomerService {
 
-    // ================== TÌM KIẾM & PHÂN TRANG ==================
-    /**
-     * Tìm kiếm khách hàng theo từ khóa (tên, sđt, email) có phân trang.
-     */
-    Page<Customer> search(String keyword, Pageable pageable);
 
-    /**
-     * Tìm kiếm khách hàng theo từ khóa + lọc loại thành viên.
-     * (Được dùng trong CustomerController để kết hợp cả filter và sort)
-     */
-    Page<Customer> search(String keyword, String memberType, Pageable pageable);
-
-    // ================== CRUD CƠ BẢN ==================
-    Customer get(Long id);
-    void create(CustomerForm form);
-    void update(Long id, CustomerForm form);
-    void delete(Long id); // xóa mềm
-    void restore(Long id); // khôi phục khách hàng bị xóa
-
-    // ================== TÌM KIẾM NÂNG CAO ==================
-    List<Customer> findByName(String name);
-    List<Customer> findByPhone(String phone);
-    List<Customer> findByMemberType(MemberType memberType);
-    List<Customer> findActiveCustomers();
-    List<Customer> findDeletedCustomers();
-
-    // ================== SẮP XẾP ==================
-    List<Customer> sortByNameAsc();
-    List<Customer> sortByNameDesc();
-    List<Customer> sortByPointsAsc();
-    List<Customer> sortByPointsDesc();
-
-    // ================== ĐIỂM TÍCH LŨY ==================
-    void addPoints(Long id, int points);
-    void subtractPoints(Long id, int points);
-    void updateMemberTypeByPoints(Long id);
-
-    // ================== THỐNG KÊ / HỖ TRỢ ==================
-    long countAll();
-    long countActive();
-    long countDeleted();
-    long countByMemberType(MemberType memberType);
 }
