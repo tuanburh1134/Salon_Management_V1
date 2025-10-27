@@ -1,55 +1,175 @@
-package com.example.salon_management.service;
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- Import head chung -->
+    <th:block th:replace="fragments/common :: head"></th:block>
+    <title th:text="${pageTitle}">Quản lý khách hàng</title>
 
-import com.example.salon_management.dto.CustomerForm;
-import com.example.salon_management.entity.Customer;
-import com.example.salon_management.entity.Customer.MemberType;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+    <style>
+        /* === Giao diện tổng thể === */
+        html, body { height: 100%; margin: 0; }
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: #f8f9fa;
+        }
+        main { flex: 1; }
+        footer {
+            margin-top: auto;
+            background: #fff;
+            border-top: 1px solid #dee2e6;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+            text-align: center;
+            padding: 12px 0;
+        }
 
-import java.util.List;
+        /* === Header === */
+        .page-header {
+            background: linear-gradient(90deg, #6f42c1, #8b5cf6);
+            color: #fff;
+            padding: 32px 0;
+            margin-bottom: 24px;
+            box-shadow: 0 3px 8px rgba(0,0,0,.1);
+        }
+        .page-header h1 {
+            font-weight: 700;
+            margin: 0;
+        }
 
-public interface CustomerService {
+        /* === Form Container === */
+        .form-card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 32px 36px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            max-width: 750px;
+            margin: 0 auto;
+        }
 
-// ================== TÌM KIẾM & PHÂN TRANG ==================
-/**
-* Tìm kiếm khách hàng theo từ khóa (tên, sđt, email) có phân trang.
-*/
-Page<Customer> search(String keyword, Pageable pageable);
+        .form-label {
+            font-weight: 600;
+            color: #212529;
+        }
 
-    /**
-    * Tìm kiếm khách hàng theo từ khóa + lọc loại thành viên.
-    * (Được dùng trong CustomerController để kết hợp cả filter và sort)
-    */
-    Page<Customer> search(String keyword, String memberType, Pageable pageable);
+        .form-control:focus, .form-select:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 .2rem rgba(139, 92, 246, 0.2);
+        }
 
-        // ================== CRUD CƠ BẢN ==================
-        Customer get(Long id);
-        void create(CustomerForm form);
-        void update(Long id, CustomerForm form);
-        void delete(Long id); // xóa mềm
-        void restore(Long id); // khôi phục khách hàng bị xóa
+        .btn-salon {
+            background: linear-gradient(135deg, #6f42c1, #8b5cf6);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(111,66,193,.25);
+            transition: all .2s ease;
+        }
 
-        // ================== TÌM KIẾM NÂNG CAO ==================
-        List<Customer> findByName(String name);
-            List<Customer> findByPhone(String phone);
-                List<Customer> findByMemberType(MemberType memberType);
-                    List<Customer> findActiveCustomers();
-                        List<Customer> findDeletedCustomers();
+        .btn-salon:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(111,66,193,.35);
+            color: #fff;
+        }
 
-                            // ================== SẮP XẾP ==================
-                            List<Customer> sortByNameAsc();
-                                List<Customer> sortByNameDesc();
-                                    List<Customer> sortByPointsAsc();
-                                        List<Customer> sortByPointsDesc();
+        .btn-outline-secondary i, .btn-salon i {
+            margin-right: 6px;
+        }
 
-                                            // ================== ĐIỂM TÍCH LŨY ==================
-                                            void addPoints(Long id, int points);
-                                            void subtractPoints(Long id, int points);
-                                            void updateMemberTypeByPoints(Long id);
+        @media (max-width: 768px) {
+            .form-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
 
-                                            // ================== THỐNG KÊ / HỖ TRỢ ==================
-                                            long countAll();
-                                            long countActive();
-                                            long countDeleted();
-                                            long countByMemberType(MemberType memberType);
-                                            }
+<body class="d-flex flex-column min-vh-100">
+<header th:replace="fragments/common :: header"></header>
+
+<div class="d-flex flex-grow-1">
+    <!-- SIDEBAR -->
+    <nav th:replace="fragments/common :: navigation"></nav>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <main class="flex-fill">
+        <!-- HEADER -->
+        <div class="page-header">
+            <div class="container">
+                <h1 class="mb-0">
+                    <i class="fa-solid fa-user-group me-2"></i>
+                    <span th:text="${pageTitle}">Thêm khách hàng</span>
+                </h1>
+                <p class="mb-0 mt-2">Nhập thông tin khách hàng vào biểu mẫu dưới đây</p>
+            </div>
+        </div>
+
+        <!-- FORM -->
+        <div class="container mb-5">
+            <div class="form-card">
+                <form th:action="@{${formAction}}" th:object="${form}" method="post" novalidate>
+                    <input type="hidden" th:if="${_csrf != null}"
+                           th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <!-- TÊN KHÁCH HÀNG -->
+                    <div class="mb-3">
+                        <label class="form-label">Tên khách hàng</label>
+                        <input class="form-control" th:field="*{name}" placeholder="VD: Nguyễn Văn A" required>
+                        <small class="text-danger" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></small>
+                    </div>
+
+                    <!-- SỐ ĐIỆN THOẠI -->
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input class="form-control" th:field="*{phone}" placeholder="VD: 0912345678"
+                               required pattern="^[0-9]{10}$"
+                               title="Số điện thoại phải gồm đúng 10 chữ số">
+                        <small class="form-text text-muted">Chỉ nhập 10 chữ số, không có ký tự khác.</small>
+                        <small class="text-danger" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></small>
+                    </div>
+
+                    <!-- EMAIL -->
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input class="form-control" th:field="*{email}" placeholder="vd@domain.com" required>
+                        <small class="text-danger" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></small>
+                    </div>
+
+                    <!-- LOẠI THÀNH VIÊN -->
+                    <div class="mb-3">
+                        <label class="form-label">Loại thành viên</label>
+                        <select class="form-select" th:field="*{memberType}" required>
+                            <option value="">-- Chọn loại thành viên --</option>
+                            <option value="MOI" th:selected="${form.memberType == 'MOI'}">MỚI</option>
+                            <option value="THAN_QUEN" th:selected="${form.memberType == 'THAN_QUEN'}">THÂN QUEN</option>
+                            <option value="DAC_BIET" th:selected="${form.memberType == 'DAC_BIET'}">ĐẶC BIỆT</option>
+                        </select>
+                        <small class="text-danger" th:if="${#fields.hasErrors('memberType')}" th:errors="*{memberType}"></small>
+                    </div>
+
+                    <!-- ĐIỂM TÍCH LŨY -->
+                    <div class="mb-3">
+                        <label class="form-label">Điểm tích lũy</label>
+                        <input class="form-control" type="number" min="0" th:field="*{point}" placeholder="VD: 100" required>
+                        <small class="text-danger" th:if="${#fields.hasErrors('point')}" th:errors="*{point}"></small>
+                    </div>
+
+                    <!-- NÚT HÀNH ĐỘNG -->
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button class="btn btn-salon px-4" type="submit">
+                            <i class="fa-solid fa-floppy-disk"></i> Lưu
+                        </button>
+                        <a class="btn btn-outline-secondary px-4" th:href="@{/customers}">
+                            <i class="fa-solid fa-arrow-left"></i> Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<footer th:replace="fragments/common :: footer"></footer>
+<div th:replace="fragments/common :: scripts"></div>
+</body>
+</html>

@@ -22,21 +22,24 @@ public class CustomerServiceImpl implements CustomerService {
     // ================== TÌM KIẾM & PHÂN TRANG ==================
     @Override
     public Page<Customer> search(String keyword, Pageable pageable) {
-        return repo.search(keyword == null ? "" : keyword.trim(), pageable);
+        String kw = (keyword == null) ? "" : keyword.trim();
+        if (kw.isBlank()) {
+            return repo.findByDeletedFalse(pageable);
+        }
+        return repo.search(kw, pageable);
     }
 
     @Override
     public Page<Customer> search(String keyword, String memberType, Pageable pageable) {
-        // Xử lý null và trim
         String kw = (keyword == null) ? "" : keyword.trim();
         String mt = (memberType == null) ? "" : memberType.trim();
 
-        // Nếu không có bộ lọc nào
+        // Không filter gì cả
         if (kw.isBlank() && mt.isBlank()) {
             return repo.findByDeletedFalse(pageable);
         }
 
-        // Nếu chỉ lọc theo loại thành viên
+        // Chỉ lọc loại thành viên
         if (kw.isBlank() && !mt.isBlank()) {
             try {
                 MemberType type = MemberType.valueOf(mt);
@@ -46,12 +49,12 @@ public class CustomerServiceImpl implements CustomerService {
             }
         }
 
-        // Nếu chỉ tìm kiếm theo từ khóa
+        // Chỉ tìm kiếm theo từ khóa
         if (!kw.isBlank() && mt.isBlank()) {
             return repo.search(kw, pageable);
         }
 
-        // Nếu vừa có từ khóa vừa có loại thành viên
+        // Kết hợp tìm kiếm + lọc loại thành viên
         try {
             MemberType type = MemberType.valueOf(mt);
             return repo.searchByKeywordAndMemberType(kw, type, pageable);
@@ -64,7 +67,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Customer get(Long id) {
         return repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("❌ Không tìm thấy khách hàng ID=" + id));
+                .orElseThrow(() -> new RuntimeException("❌ Không tìm thấy khách hàng có ID=" + id));
     }
 
     // ================== THÊM MỚI KHÁCH HÀNG ==================
@@ -100,7 +103,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public void delete(Long id) {
         Customer c = get(id);
-        c.softDelete();
+        c.setDeleted(true);
         repo.save(c);
     }
 
@@ -108,7 +111,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public void restore(Long id) {
         Customer c = get(id);
-        c.restore();
+        c.setDeleted(false);
         repo.save(c);
     }
 
@@ -135,28 +138,28 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public List<Customer> findDeletedCustomers() {
-        return repo.findAllDeleted();
+        return repo.findByDeletedTrue();
     }
 
     // ================== SẮP XẾP ==================
     @Override
     public List<Customer> sortByNameAsc() {
-        return repo.findAllOrderByNameAsc();
+        return repo.findAllByDeletedFalseOrderByNameAsc();
     }
 
     @Override
     public List<Customer> sortByNameDesc() {
-        return repo.findAllOrderByNameDesc();
+        return repo.findAllByDeletedFalseOrderByNameDesc();
     }
 
     @Override
     public List<Customer> sortByPointsAsc() {
-        return repo.findAllOrderByPointAsc();
+        return repo.findAllByDeletedFalseOrderByPointAsc();
     }
 
     @Override
     public List<Customer> sortByPointsDesc() {
-        return repo.findAllOrderByPointDesc();
+        return repo.findAllByDeletedFalseOrderByPointDesc();
     }
 
     // ================== ĐIỂM TÍCH LŨY ==================
@@ -191,16 +194,16 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public long countActive() {
-        return repo.findByDeletedFalse().size();
+        return repo.countByDeletedFalse();
     }
 
     @Override
     public long countDeleted() {
-        return repo.findAllDeleted().size();
+        return repo.countByDeletedTrue();
     }
 
     @Override
     public long countByMemberType(MemberType memberType) {
-        return repo.findByDeletedFalseAndMemberType(memberType).size();
+        return repo.countByDeletedFalseAndMemberType(memberType);
     }
 }
