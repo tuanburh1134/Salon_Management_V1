@@ -9,7 +9,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-
+import java.util.Optional;
 import java.util.List;
 
 @Service
@@ -18,7 +18,7 @@ import java.util.List;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository repo;
-
+    private final CustomerRepository customerRepository;
     // ================== TÌM KIẾM & PHÂN TRANG ==================
     @Override
     public Page<Customer> search(String keyword, Pageable pageable) {
@@ -206,4 +206,9 @@ public class CustomerServiceImpl implements CustomerService {
     public long countByMemberType(MemberType memberType) {
         return repo.countByDeletedFalseAndMemberType(memberType);
     }
+    @Override
+    public Optional<Customer> getById(Long id) {
+        return customerRepository.findById(id);
+    }
+
 }

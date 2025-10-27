@@ -142,4 +142,14 @@ public class Customer {
             return displayName;
         }
     }
+    @Column(length = 500)
+    private String note;
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
 }

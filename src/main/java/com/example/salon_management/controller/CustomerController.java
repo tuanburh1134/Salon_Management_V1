@@ -11,6 +11,8 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
 @RequiredArgsConstructor
@@ -18,7 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class CustomerController {
 
     private final CustomerService service;
-
+    private final CustomerService customerService;
     // ========================== DANH SÁCH KHÁCH HÀNG ==========================
     @GetMapping({"", "/", "/list"})
     public String list(@RequestParam(value = "q", required = false) String keyword,
@@ -143,6 +145,14 @@ public class CustomerController {
         // 🔁 Giữ nguyên trạng thái lọc / tìm kiếm / phân trang sau khi xoá
         String redirectUrl = buildUrl(q, memberType, page, size, sortBy, dir);
         return "redirect:" + redirectUrl;
+    }
+    @GetMapping("/{id}/view")
+    public String viewCustomer(@PathVariable Long id, Model model) {
+        Customer customer = customerService.getById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khách hàng ID: " + id));
+
+        model.addAttribute("customer", customer);
+        return "customer/detail";
     }
 
     // ========================== HÀM HỖ TRỢ ==========================

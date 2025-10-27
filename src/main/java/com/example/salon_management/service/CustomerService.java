@@ -5,7 +5,7 @@ import com.example.salon_management.entity.Customer;
 import com.example.salon_management.entity.Customer.MemberType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
+import java.util.Optional;
 import java.util.List;
 
 public interface CustomerService {
@@ -24,6 +24,7 @@ public interface CustomerService {
 
     // ================== CRUD CƠ BẢN ==================
     Customer get(Long id);
+    Optional<Customer> getById(Long id);
     void create(CustomerForm form);
     void update(Long id, CustomerForm form);
     void delete(Long id); // xóa mềm
@@ -52,4 +53,5 @@ public interface CustomerService {
     long countActive();
     long countDeleted();
     long countByMemberType(MemberType memberType);
+
 }
