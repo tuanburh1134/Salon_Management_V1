@@ -1,42 +1,48 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <!-- Nhúng head chung nhưng vẫn cho phép thêm title/CSS riêng -->
     <th:block th:replace="fragments/common :: head"></th:block>
+
     <title>Danh sách nhân viên</title>
 
     <style>
-        /* === Sticky Footer / Layout === */
+        /* === Sticky Footer === */
         html, body { height: 100%; margin: 0; }
-        body { display: flex; flex-direction: column; min-height: 100vh; background: #f8f9fa; color: #212529; }
+        body { display: flex; flex-direction: column; min-height: 100vh; background: #f8f9fa; }
         main { flex: 1; }
         footer {
             margin-top: auto; background: #fff; border-top: 1px solid #dee2e6;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.05); text-align: center; padding: 12px 0; width: 100%;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05); text-align: center; padding: 12px 0;
+            position: relative; bottom: 0; width: 100%;
         }
 
-        /* === Header trang === */
-        .page-header {
-            background: linear-gradient(90deg, #0d6efd, #4f9cff);
-            color: #fff; padding: 28px 0; margin-bottom: 24px;
-            box-shadow: 0 4px 16px rgba(13,110,253,.25);
+        /* === Style trang === */
+        .page-header{
+            background: linear-gradient(90deg, #ffd700, #ffcc00);
+            color:#fff; padding:32px 0; margin-bottom:24px;
+            box-shadow: 0 3px 8px rgba(0,0,0,.1);
         }
-        .page-header h1 { font-weight: 700; margin: 0; }
-
-        /* === Card, table, button === */
-        .card { border: 1px solid #edf0f4; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .table-hover tbody tr:hover { background: #f2f7ff; }
-
+        .card{ border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); overflow:hidden; }
         .btn-salon{
-            background: linear-gradient(135deg, #6f42c1, #8b5cf6);
-            color:#fff; border:none; border-radius:8px;
-            box-shadow:0 4px 12px rgba(111,66,193,.25); transition:all .2s ease;
+            background: linear-gradient(135deg,#ffd700,#ffcc00); color:#fff; border:none; border-radius:8px;
+            box-shadow: 0 4px 12px rgba(255,215,0,.25); transition: all .2s ease;
         }
-        .btn-salon:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(111,66,193,.35); }
-
-        .pagination .page-link { border-radius: 10px; border: 1px solid #dee2e6; color: #212529; transition: all .2s; }
-        .pagination .page-link:hover { background: #f2f4f7; border-color: #cbd5e1; }
-        .page-item.active .page-link { background: #0d6efd; border-color: #0d6efd; color: #fff; font-weight: 700; }
+        .btn-salon:hover{ transform: translateY(-1px); box-shadow:0 6px 18px rgba(255,215,0,.35); }
+        .table thead{ background:#343a40; color:#fff; }
+        .sort-btn { cursor: pointer; color: #fff; }
+        .sort-btn:hover { text-decoration: underline; }
+        
+        /* === Search input with clear button === */
+        #keywordInput { 
+            padding-right: 40px; /* Tránh text bị che bởi nút clear */
+        }
+        #clearSearchBtn { 
+            cursor: pointer; 
+            transition: opacity 0.2s;
+        }
+        #clearSearchBtn:hover { 
+            opacity: 1 !important; 
+        }
     </style>
 </head>
 
@@ -44,12 +50,11 @@
 <!-- Header chung -->
 <header th:replace="fragments/common :: header"></header>
 
-<!-- NAV + MAIN cùng hàng để không bị đẩy -->
+<!-- Đặt NAV và MAIN cùng một hàng để không bị đẩy xuống -->
 <div class="d-flex flex-grow-1">
     <nav th:replace="fragments/common :: navigation"></nav>
 
     <main class="flex-fill">
-        <!-- Header trang -->
         <div class="page-header">
             <div class="container">
                 <h1 class="mb-0"><i class="fa-solid fa-users me-2"></i>Danh sách nhân viên</h1>
@@ -58,85 +63,146 @@
         </div>
 
         <div class="container">
-
-            <!-- Flash -->
-            <div th:if="${msg}" class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fa-solid fa-circle-check me-1"></i>
-                <span th:text="${msg}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-
             <!-- Bộ lọc -->
             <div class="card mb-3">
                 <div class="card-body">
-                    <form id="searchForm" class="row g-2" th:action="@{/employees}" th:object="${q}" method="get">
-                        <div class="col-md-5">
-                            <input class="form-control" th:field="*{keyword}" placeholder="Tìm theo tên, chức vụ, chuyên môn...">
+                    <form class="row g-3 align-items-end" th:action="@{/employees}" method="get">
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                <i class="fa-solid fa-magnifying-glass me-1"></i>Từ khóa
+                            </label>
+                            <div class="position-relative">
+                                <input id="keywordInput" class="form-control" name="keyword" placeholder="Nhập tên nhân viên..." th:value="${q?.keyword}">
+                                <button type="button" id="clearSearchBtn" class="btn-close position-absolute top-50 end-0 translate-middle-y me-2" style="display: none; z-index: 10; opacity: 0.5;" onclick="clearSearch()"></button>
+                            </div>
                         </div>
-
-                        <input type="hidden" th:field="*{sortBy}">
-                        <input type="hidden" th:field="*{dir}">
-                        <input type="hidden" th:field="*{page}">
-
-                        <div class="col-auto">
-                            <button class="btn btn-outline-secondary" type="submit">
+                        <div class="col-md-2">
+                            <label class="form-label">
+                                <i class="fa-solid fa-user-tie me-1"></i>Chức vụ
+                            </label>
+                            <select class="form-control" name="position">
+                                <option value="">Tất cả</option>
+                                <option value="Quản lý" th:selected="${q?.position == 'Quản lý'}">Quản lý</option>
+                                <option value="Nhân viên" th:selected="${q?.position == 'Nhân viên'}">Nhân viên</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">
+                                <i class="fa-solid fa-star me-1"></i>Chuyên môn
+                            </label>
+                            <select class="form-control" name="specialty">
+                                <option value="">Tất cả</option>
+                                <option value="Chăm sóc tay" th:selected="${q?.specialty == 'Chăm sóc tay'}">Chăm sóc tay</option>
+                                <option value="Chăm sóc da" th:selected="${q?.specialty == 'Chăm sóc da'}">Chăm sóc da</option>
+                                <option value="Chăm sóc tóc" th:selected="${q?.specialty == 'Chăm sóc tóc'}">Chăm sóc tóc</option>
+                                <option value="Trang điểm" th:selected="${q?.specialty == 'Trang điểm'}">Trang điểm</option>
+                                <option value="Mát xa" th:selected="${q?.specialty == 'Mát xa'}">Mát xa</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">
+                                <i class="fa-solid fa-clock me-1"></i>Ca làm việc
+                            </label>
+                            <select class="form-control" name="shift">
+                                <option value="">Tất cả</option>
+                                <option value="Ca sáng" th:selected="${q?.shift == 'Ca sáng'}">Ca sáng</option>
+                                <option value="Ca chiều" th:selected="${q?.shift == 'Ca chiều'}">Ca chiều</option>
+                                <option value="Ca tối" th:selected="${q?.shift == 'Ca tối'}">Ca tối</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1 d-grid">
+                            <button class="btn btn-salon" type="submit">
                                 <i class="fa-solid fa-search me-1"></i>Tìm
                             </button>
                         </div>
-                        <div class="col-md-2 d-grid">
-                            <a class="btn btn-outline-secondary" th:href="@{/employees}">
-                                <i class="fa-solid fa-xmark me-1"></i>Clear
-                            </a>
-                        </div>
-                        <div class="col-auto ms-auto">
-                            <a class="btn btn-salon" th:href="@{/employees/create}">
-                                <i class="fa-solid fa-plus me-1"></i>Thêm mới
+                        <div class="col-md-2 d-grid ms-auto">
+                            <a class="btn btn-primary d-flex align-items-center justify-content-center" th:href="@{/employees/create}">
+                                <i class="fa-solid fa-plus me-1"></i><span>Thêm nhân viên</span>
                             </a>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- Bảng -->
+            <!-- Bảng danh sách -->
             <div class="card">
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table table-hover mb-0 align-middle">
                             <thead class="table-dark">
                             <tr>
-                                <th><a href="javascript:void(0)" onclick="sortBy('name')" class="text-white text-decoration-none">Họ tên</a></th>
-                                <th><a href="javascript:void(0)" onclick="sortBy('position')" class="text-white text-decoration-none">Chức vụ</a></th>
-                                <th><a href="javascript:void(0)" onclick="sortBy('specialty')" class="text-white text-decoration-none">Chuyên môn</a></th>
-                                <th><a href="javascript:void(0)" onclick="sortBy('shift')" class="text-white text-decoration-none">Ca làm việc</a></th>
-                                <th class="text-end"><a href="javascript:void(0)" onclick="sortBy('salary')" class="text-white text-decoration-none">Lương</a></th>
-                                <th class="text-center" style="width:160px;">Hành động</th>
+                                <th style="width:80px">STT</th>
+                                <th>
+                                    <a th:href="@{/employees/sort(sortBy='name', sortDir=${q?.sortBy == 'name' and q.sortDir == 'asc' ? 'desc' : 'asc'}, keyword=${q?.keyword}, position=${q?.position}, shift=${q?.shift}, specialty=${q?.specialty}, page=0)}" class="sort-btn text-decoration-none">
+                                        Họ tên <i class="fa-solid" th:classappend="${q?.sortBy == 'name' ? (q.sortDir == 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/employees/sort(sortBy='position', sortDir=${q?.sortBy == 'position' and q.sortDir == 'asc' ? 'desc' : 'asc'}, keyword=${q?.keyword}, position=${q?.position}, shift=${q?.shift}, specialty=${q?.specialty}, page=0)}" class="sort-btn text-decoration-none">
+                                        Chức vụ <i class="fa-solid" th:classappend="${q?.sortBy == 'position' ? (q.sortDir == 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/employees/sort(sortBy='specialty', sortDir=${q?.sortBy == 'specialty' and q.sortDir == 'asc' ? 'desc' : 'asc'}, keyword=${q?.keyword}, position=${q?.position}, shift=${q?.shift}, specialty=${q?.specialty}, page=0)}" class="sort-btn text-decoration-none">
+                                        Chuyên môn <i class="fa-solid" th:classappend="${q?.sortBy == 'specialty' ? (q.sortDir == 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}"></i>
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/employees/sort(sortBy='shift', sortDir=${q?.sortBy == 'shift' and q.sortDir == 'asc' ? 'desc' : 'asc'}, keyword=${q?.keyword}, position=${q?.position}, shift=${q?.shift}, specialty=${q?.specialty}, page=0)}" class="sort-btn text-decoration-none">
+                                        Ca làm việc <i class="fa-solid" th:classappend="${q?.sortBy == 'shift' ? (q.sortDir == 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}"></i>
+                                    </a>
+                                </th>
+                                <th style="width:140px" class="text-end">
+                                    <a th:href="@{/employees/sort(sortBy='salary', sortDir=${q?.sortBy == 'salary' and q.sortDir == 'asc' ? 'desc' : 'asc'}, keyword=${q?.keyword}, position=${q?.position}, shift=${q?.shift}, specialty=${q?.specialty}, page=0)}" class="sort-btn text-decoration-none">
+                                        Lương <i class="fa-solid" th:classappend="${q?.sortBy == 'salary' ? (q.sortDir == 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}"></i>
+                                    </a>
+                                </th>
+                                <th style="width:170px" class="text-end">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:each="e : ${data.content}">
-                                <td th:text="${e.name}">Nguyễn Văn A</td>
-                                <td th:text="${e.position}">Nhân viên</td>
-                                <td th:text="${e.specialty}">Cắt tóc</td>
-                                <td th:text="${e.shift}">Sáng</td>
-                                <td class="text-end" th:text="${#numbers.formatDecimal(e.salary,0,'COMMA',0,'POINT')} + ' VNĐ'">0 VNĐ</td>
-                                <td class="text-center">
-                                    <div class="btn-group btn-group-sm">
-                                        <a class="btn btn-outline-primary" th:href="@{|/employees/${e.id}/edit|}">
-                                            <i class="fa-regular fa-pen-to-square"></i>
-                                        </a>
-                                        <form th:action="@{|/employees/${e.id}/delete|}" method="post"
-                                              onsubmit="return confirm('Xác nhận xoá nhân viên này?');" class="d-inline">
-                                            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                            <button class="btn btn-outline-danger" type="submit">
-                                                <i class="fa-regular fa-trash-can"></i>
-                                            </button>
-                                        </form>
-                                    </div>
+                            <tr th:if="${data.totalElements == 0}">
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="fa-regular fa-inbox fa-2x mb-2"></i><br>Không có dữ liệu
                                 </td>
                             </tr>
-                            <tr th:if="${data.totalElements == 0}">
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    <i class="fa-regular fa-inbox fa-2x mb-2"></i><br>Không có dữ liệu
+
+                            <tr th:each="e, iter : ${data.content}">
+                                <td><span class="badge bg-secondary" th:text="${data.number * data.size + iter.index + 1}">1</span></td>
+                                <td><strong th:text="${e.name}"></strong></td>
+                                <td><span class="badge bg-info" th:text="${e.position}"></span></td>
+                                <td th:text="${e.specialty}"></td>
+                                <td th:text="${e.shift}"></td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(e.salary,0,'COMMA',0,'POINT')} + ' VNĐ'">0 VNĐ</td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-info" th:href="@{|/employees/${e.id}/detail|}" title="Chi tiết">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                    <a class="btn btn-sm btn-outline-warning" th:href="@{|/employees/${e.id}/edit|}" title="Chỉnh sửa">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </a>
+                                    <form th:action="@{|/employees/${e.id}/delete|}" method="post" class="d-inline">
+                                        <input type="hidden" th:if="${_csrf != null}"
+                                               th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <input type="hidden" name="keyword" th:value="${q?.keyword}"/>
+                                        <input type="hidden" name="position" th:value="${q?.position}"/>
+                                        <input type="hidden" name="shift" th:value="${q?.shift}"/>
+                                        <input type="hidden" name="specialty" th:value="${q?.specialty}"/>
+                                        <input type="hidden" name="page" th:value="${q?.page}"/>
+                                        <input type="hidden" name="size" th:value="${q?.size}"/>
+                                        <input type="hidden" name="sortBy" th:value="${q?.sortBy}"/>
+                                        <input type="hidden" name="sortDir" th:value="${q?.sortDir}"/>
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                                type="submit" 
+                                                title="Xóa nhân viên"
+                                                data-confirm="true"
+                                                data-confirm-title="Xác nhận xóa nhân viên"
+                                                data-confirm-body="Bạn có chắc chắn muốn xóa nhân viên này? Hành động này không thể hoàn tác."
+                                                data-confirm-submit-text="Xóa">
+
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             </tbody>
@@ -148,34 +214,30 @@
             <!-- Phân trang -->
             <div th:if="${data.totalPages > 1}" class="card mt-3">
                 <div class="card-body">
-                    <nav>
+                    <nav aria-label="pagination">
                         <ul class="pagination justify-content-center mb-0">
                             <li class="page-item" th:classappend="${data.first} ? 'disabled'">
-                                <a class="page-link"
-                                   th:href="@{/employees(keyword=${q.keyword}, page=0, size=${q.size}, sortBy=${q.sortBy}, dir=${q.dir})}">
+                                <a class="page-link" th:href="@{/employees(page=0, size=${q?.size}, keyword=${q?.keyword}, position=${q?.position}, shift=${q?.shift}, specialty=${q?.specialty}, sortBy=${q?.sortBy}, sortDir=${q?.sortDir})}">
                                     <i class="fa-solid fa-angles-left"></i>
                                 </a>
                             </li>
                             <li class="page-item" th:classappend="${data.first} ? 'disabled'">
-                                <a class="page-link"
-                                   th:href="@{/employees(keyword=${q.keyword}, page=${data.number - 1}, size=${q.size}, sortBy=${q.sortBy}, dir=${q.dir})}">
+                                <a class="page-link" th:href="@{/employees(page=${data.number - 1}, size=${q?.size}, keyword=${q?.keyword}, position=${q?.position}, shift=${q?.shift}, specialty=${q?.specialty}, sortBy=${q?.sortBy}, sortDir=${q?.sortDir})}">
                                     <i class="fa-solid fa-angle-left"></i>
                                 </a>
                             </li>
                             <li class="page-item" th:each="i : ${#numbers.sequence(0, data.totalPages - 1)}"
                                 th:classappend="${i == data.number} ? 'active'">
                                 <a class="page-link" th:text="${i + 1}"
-                                   th:href="@{/employees(keyword=${q.keyword}, page=${i}, size=${q.size}, sortBy=${q.sortBy}, dir=${q.dir})}">1</a>
+                                   th:href="@{/employees(page=${i}, size=${q?.size}, keyword=${q?.keyword}, position=${q?.position}, shift=${q?.shift}, specialty=${q?.specialty}, sortBy=${q?.sortBy}, sortDir=${q?.sortDir})}">1</a>
                             </li>
                             <li class="page-item" th:classappend="${data.last} ? 'disabled'">
-                                <a class="page-link"
-                                   th:href="@{/employees(keyword=${q.keyword}, page=${data.number + 1}, size=${q.size}, sortBy=${q.sortBy}, dir=${q.dir})}">
+                                <a class="page-link" th:href="@{/employees(page=${data.number + 1}, size=${q?.size}, keyword=${q?.keyword}, position=${q?.position}, shift=${q?.shift}, specialty=${q?.specialty}, sortBy=${q?.sortBy}, sortDir=${q?.sortDir})}">
                                     <i class="fa-solid fa-angle-right"></i>
                                 </a>
                             </li>
                             <li class="page-item" th:classappend="${data.last} ? 'disabled'">
-                                <a class="page-link"
-                                   th:href="@{/employees(keyword=${q.keyword}, page=${data.totalPages - 1}, size=${q.size}, sortBy=${q.sortBy}, dir=${q.dir})}">
+                                <a class="page-link" th:href="@{/employees(page=${data.totalPages - 1}, size=${q?.size}, keyword=${q?.keyword}, position=${q?.position}, shift=${q?.shift}, specialty=${q?.specialty}, sortBy=${q?.sortBy}, sortDir=${q?.sortDir})}">
                                     <i class="fa-solid fa-angles-right"></i>
                                 </a>
                             </li>
@@ -188,45 +250,45 @@
     </main>
 </div>
 
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">
-                    <i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>Xác nhận Xóa
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Bạn có chắc chắn muốn xóa nhân viên này?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <form id="deleteForm" method="post">
-                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                    <input type="hidden" name="keyword" th:value="${q.keyword}"/>
-                    <input type="hidden" name="position" th:value="${q.position}"/>
-                    <input type="hidden" name="shift" th:value="${q.shift}"/>
-                    <input type="hidden" name="specialty" th:value="${q.specialty}"/>
-                    <input type="hidden" name="page" th:value="${q.page}"/>
-                    <input type="hidden" name="size" th:value="${q.size}"/>
-                    <button type="submit" class="btn btn-danger">Xác nhận Xóa</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <footer th:replace="fragments/common :: footer"></footer>
 <div th:replace="fragments/common :: scripts"></div>
 
-<!-- (Tuỳ chọn) JS clear form nếu muốn dùng -->
-<script>
-    function clearSearch() {
-        const form = document.getElementById('searchForm');
-        if (form) form.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
-    }
-</script>
+<!-- ===== Include notify fragments ===== -->
+<th:block th:replace="fragments/notify :: confirmModal"></th:block>
+<th:block th:replace="fragments/notify :: toastContainer"></th:block>
 
+<!-- Hidden elements để truyền flash attributes -->
+<div th:if="${successTitle}" data-success-title="[[${successTitle}]]" style="display: none;"></div>
+<div th:if="${successMessage}" data-success-message="[[${successMessage}]]" style="display: none;"></div>
+
+<th:block th:replace="fragments/notify :: notifyScripts"></th:block>
+
+<script>
+    // Lấy các phần tử
+    const keywordInput = document.getElementById('keywordInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    
+    // Function để hiển thị/ẩn nút clear
+    function toggleClearButton() {
+        if (keywordInput.value.trim().length > 0) {
+            clearSearchBtn.style.display = 'block';
+        } else {
+            clearSearchBtn.style.display = 'none';
+        }
+    }
+    
+    // Function xóa search và reload trang
+    function clearSearch() {
+        keywordInput.value = '';
+        toggleClearButton();
+        window.location.href = '/employees';
+    }
+    
+    // Kiểm tra ban đầu khi trang load
+    toggleClearButton();
+    
+    // Lắng nghe sự kiện input để tự động hiển thị/ẩn nút clear
+    keywordInput.addEventListener('input', toggleClearButton);
+</script>
 </body>
 </html>
