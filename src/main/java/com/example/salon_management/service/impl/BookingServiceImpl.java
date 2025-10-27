@@ -9,6 +9,7 @@ import com.example.salon_management.repository.BookingRepository;
 import com.example.salon_management.repository.CustomerRepository;
 import com.example.salon_management.repository.EmployeeRepository;
 import com.example.salon_management.repository.ServiceItemRepository;
+import com.example.salon_management.service.BookingCodeService;
 import com.example.salon_management.service.BookingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ public class BookingServiceImpl implements BookingService {
     private final CustomerRepository customerRepository;
     private final EmployeeRepository employeeRepository;
     private final ServiceItemRepository serviceItemRepository;
+    private final BookingCodeService bookingCodeService;
 
     @Override
     @Transactional(readOnly = true)
@@ -47,6 +49,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Booking create(BookingForm form) {
         Booking booking = new Booking();
+        booking.setBookingCode(bookingCodeService.generateNextBookingCode());
         updateBookingFromForm(booking, form);
         booking.setCreatedAt(LocalDateTime.now());
         return bookingRepository.save(booking);
@@ -79,6 +82,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
         booking.setEmployee(employee);
 
+        booking.setBookingDateTime(form.getBookingDateTime());
         booking.setStatus(form.getStatus());
         booking.setNotes(form.getNotes());
     }
