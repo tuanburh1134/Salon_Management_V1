@@ -19,48 +19,56 @@ public class CustomerController {
 
     private final CustomerService service;
 
-    // LIST
+    // ========================== DANH SÁCH KHÁCH HÀNG ==========================
     @GetMapping({"", "/", "/list"})
-    public String list(@RequestParam(value = "q", required = false) String q,
+    public String list(@RequestParam(value = "q", required = false) String keyword,
+                       @RequestParam(value = "memberType", required = false) String memberType,
                        @RequestParam(defaultValue = "0") int page,
                        @RequestParam(defaultValue = "10") int size,
                        @RequestParam(defaultValue = "name") String sortBy,
                        @RequestParam(defaultValue = "asc") String dir,
                        Model model) {
 
-        Sort sort = "asc".equalsIgnoreCase(dir)
+        Sort sort = dir.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Customer> data = service.search(q, pageable);
+        Page<Customer> customers = service.search(keyword, memberType, pageable);
 
-        String nextDir = "asc".equalsIgnoreCase(dir) ? "desc" : "asc";
+        String nextDir = dir.equalsIgnoreCase("asc") ? "desc" : "asc";
 
-        model.addAttribute("data", data);
-        model.addAttribute("q", q == null ? "" : q);
+        model.addAttribute("data", customers);
+        model.addAttribute("q", keyword == null ? "" : keyword.trim());
+        model.addAttribute("memberType", memberType == null ? "" : memberType);
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("dir", dir);
-        model.addAttribute("sortByNameUrl", buildUrl(q, 0, size, "name", nextDir));
-        model.addAttribute("sortByPointUrl", buildUrl(q, 0, size, "point", nextDir));
+        model.addAttribute("nextDir", nextDir);
 
-        model.addAttribute("hasPrev", data.hasPrevious());
-        model.addAttribute("hasNext", data.hasNext());
-        model.addAttribute("currentPage", data.getNumber() + 1);
-        model.addAttribute("totalPages", data.getTotalPages());
-        model.addAttribute("prevUrl", data.hasPrevious() ? buildUrl(q, data.getNumber() - 1, size, sortBy, dir) : null);
-        model.addAttribute("nextUrl", data.hasNext() ? buildUrl(q, data.getNumber() + 1, size, sortBy, dir) : null);
+        model.addAttribute("sortByNameUrl", buildUrl(keyword, memberType, 0, size, "name", nextDir));
+        model.addAttribute("sortByPointUrl", buildUrl(keyword, memberType, 0, size, "point", nextDir));
+
+        model.addAttribute("hasPrev", customers.hasPrevious());
+        model.addAttribute("hasNext", customers.hasNext());
+        model.addAttribute("currentPage", customers.getNumber() + 1);
+        model.addAttribute("totalPages", customers.getTotalPages());
+        model.addAttribute("prevUrl", customers.hasPrevious()
+                ? buildUrl(keyword, memberType, customers.getNumber() - 1, size, sortBy, dir)
+                : null);
+        model.addAttribute("nextUrl", customers.hasNext()
+                ? buildUrl(keyword, memberType, customers.getNumber() + 1, size, sortBy, dir)
+                : null);
+
+        model.addAttribute("memberTypes", new String[]{"", "MOI", "THAN_QUEN", "DAC_BIET"});
+        model.addAttribute("pageTitle", "Danh sách khách hàng");
 
         return "customer/list";
     }
-    // CREATE
+
+    // ========================== THÊM MỚI KHÁCH HÀNG ==========================
     @GetMapping("/create")
     public String createForm(Model model) {
-        model.addAttribute("form", new CustomerForm());
-        model.addAttribute("pageTitle", "Thêm khách hàng");
-        model.addAttribute("formAction", "/customers/create");
-        model.addAttribute("submitLabel", "Lưu mới");
-        model.addAttribute("isEdit", false);
+        setupFormModel(model, new CustomerForm(), "Thêm khách hàng", "/customers/create", "Lưu mới", false);
         return "customer/form";
     }
 
@@ -68,33 +76,33 @@ public class CustomerController {
     public String create(@Valid @ModelAttribute("form") CustomerForm form,
                          BindingResult br, RedirectAttributes ra, Model model) {
         if (br.hasErrors()) {
-            model.addAttribute("pageTitle", "Thêm khách hàng");
-            model.addAttribute("formAction", "/customers/create");
-            model.addAttribute("submitLabel", "Lưu mới");
-            model.addAttribute("isEdit", false);
+            setupFormModel(model, form, "Thêm khách hàng", "/customers/create", "Lưu mới", false);
             return "customer/form";
         }
+
         service.create(form);
-        ra.addFlashAttribute("msg", "Đã thêm khách hàng mới!");
+        ra.addFlashAttribute("msg", "✅ Đã thêm khách hàng mới thành công!");
         return "redirect:/customers";
     }
-    // EDIT
-    @GetMapping("/{id}/edit")
-    public String editForm(@PathVariable Long id, Model model) {
-        var c = service.get(id);
-        CustomerForm f = new CustomerForm();
-        f.setName(c.getName());
-        f.setPhone(c.getPhone());
-        f.setEmail(c.getEmail());
-        f.setMemberType(c.getMemberType());
-        f.setPoint(c.getPoint());
 
-        model.addAttribute("form", f);
-        model.addAttribute("pageTitle", "Chỉnh sửa khách hàng");
-        model.addAttribute("formAction", "/customers/" + id + "/edit");
-        model.addAttribute("submitLabel", "Cập nhật");
-        model.addAttribute("isEdit", true);
-        return "customer/form";
+    // ========================== CHỈNH SỬA KHÁCH HÀNG ==========================
+    @GetMapping("/{id}/edit")
+    public String editForm(@PathVariable Long id, Model model, RedirectAttributes ra) {
+        try {
+            Customer c = service.get(id);
+            CustomerForm f = new CustomerForm();
+            f.setName(c.getName());
+            f.setPhone(c.getPhone());
+            f.setEmail(c.getEmail());
+            f.setMemberType(c.getMemberType() != null ? c.getMemberType().name() : null);
+            f.setPoint(c.getPoint());
+
+            setupFormModel(model, f, "Chỉnh sửa khách hàng", "/customers/" + id + "/edit", "Cập nhật", true);
+            return "customer/form";
+        } catch (RuntimeException e) {
+            ra.addFlashAttribute("msg", "⚠️ Không tìm thấy khách hàng có ID " + id);
+            return "redirect:/customers";
+        }
     }
 
     @PostMapping("/{id}/edit")
@@ -102,27 +110,53 @@ public class CustomerController {
                          @Valid @ModelAttribute("form") CustomerForm form,
                          BindingResult br, RedirectAttributes ra, Model model) {
         if (br.hasErrors()) {
-            model.addAttribute("pageTitle", "Chỉnh sửa khách hàng");
-            model.addAttribute("formAction", "/customers/" + id + "/edit");
-            model.addAttribute("submitLabel", "Cập nhật");
-            model.addAttribute("isEdit", true);
+            setupFormModel(model, form, "Chỉnh sửa khách hàng", "/customers/" + id + "/edit", "Cập nhật", true);
             return "customer/form";
         }
-        service.update(id, form);
-        ra.addFlashAttribute("msg", "Đã cập nhật khách hàng!");
-        return "redirect:/customers";
-    }
-    // DELETE
-    @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Long id, RedirectAttributes ra) {
-        service.delete(id);
-        ra.addFlashAttribute("msg", "Đã xoá khách hàng!");
+
+        try {
+            service.update(id, form);
+            ra.addFlashAttribute("msg", "✅ Cập nhật thông tin khách hàng thành công!");
+        } catch (RuntimeException e) {
+            ra.addFlashAttribute("msg", "⚠️ Cập nhật thất bại: " + e.getMessage());
+        }
         return "redirect:/customers";
     }
 
-    // Helpers
-    private String buildUrl(String q, int page, int size, String sortBy, String dir) {
+    // ========================== XOÁ KHÁCH HÀNG ==========================
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id,
+                         @RequestParam(required = false) String q,
+                         @RequestParam(required = false) String memberType,
+                         @RequestParam(defaultValue = "0") int page,
+                         @RequestParam(defaultValue = "10") int size,
+                         @RequestParam(defaultValue = "name") String sortBy,
+                         @RequestParam(defaultValue = "asc") String dir,
+                         RedirectAttributes ra) {
+        try {
+            service.delete(id);
+            ra.addFlashAttribute("msg", "🗑️ Đã xoá khách hàng thành công!");
+        } catch (RuntimeException e) {
+            ra.addFlashAttribute("msg", "⚠️ Không thể xoá: " + e.getMessage());
+        }
+
+        // 🔁 Giữ nguyên trạng thái lọc / tìm kiếm / phân trang sau khi xoá
+        String redirectUrl = buildUrl(q, memberType, page, size, sortBy, dir);
+        return "redirect:" + redirectUrl;
+    }
+
+    // ========================== HÀM HỖ TRỢ ==========================
+    private void setupFormModel(Model model, CustomerForm form, String title, String action, String submit, boolean isEdit) {
+        model.addAttribute("form", form);
+        model.addAttribute("pageTitle", title);
+        model.addAttribute("formAction", action);
+        model.addAttribute("submitLabel", submit);
+        model.addAttribute("isEdit", isEdit);
+    }
+
+    private String buildUrl(String q, String memberType, int page, int size, String sortBy, String dir) {
         String kw = (q == null || q.isBlank()) ? "" : q.trim().replace(" ", "%20");
-        return "/customers?q=" + kw + "&page=" + page + "&size=" + size + "&sortBy=" + sortBy + "&dir=" + dir;
+        String mt = (memberType == null || memberType.isBlank()) ? "" : memberType;
+        return "/customers?q=" + kw + "&memberType=" + mt + "&page=" + page + "&size=" + size + "&sortBy=" + sortBy + "&dir=" + dir;
     }
 }
