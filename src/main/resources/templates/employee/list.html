@@ -188,6 +188,35 @@
     </main>
 </div>
 
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>Xác nhận Xóa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa nhân viên này?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" name="keyword" th:value="${q.keyword}"/>
+                    <input type="hidden" name="position" th:value="${q.position}"/>
+                    <input type="hidden" name="shift" th:value="${q.shift}"/>
+                    <input type="hidden" name="specialty" th:value="${q.specialty}"/>
+                    <input type="hidden" name="page" th:value="${q.page}"/>
+                    <input type="hidden" name="size" th:value="${q.size}"/>
+                    <button type="submit" class="btn btn-danger">Xác nhận Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <footer th:replace="fragments/common :: footer"></footer>
 <div th:replace="fragments/common :: scripts"></div>
 
@@ -198,5 +227,6 @@
         if (form) form.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
     }
 </script>
+
 </body>
 </html>
