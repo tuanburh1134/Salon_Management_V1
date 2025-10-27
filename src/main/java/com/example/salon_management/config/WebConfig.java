@@ -5,8 +5,6 @@ import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -19,10 +17,10 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceHandler("/uploads/**")
                 .addResourceLocations("file:uploads/");
     }
-}
+
     @Override
     public void addFormatters(FormatterRegistry registry) {
-        // Converter for LocalDateTime to String (for datetime-local input)
+        // Converter for String to LocalDateTime (for datetime-local input)
         registry.addConverter(String.class, LocalDateTime.class, source -> {
             if (source == null || source.trim().isEmpty()) {
                 return null;
@@ -39,4 +37,3 @@ public class WebConfig implements WebMvcConfigurer {
         });
     }
 }
-
