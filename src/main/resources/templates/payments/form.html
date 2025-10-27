@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head}">
+    <title th:text="${pageTitle}">Tạo thanh toán</title>
+</head>
+<body>
+<nav th:replace="~{fragments/common :: navigation}"></nav>
+
+<main>
+    <div class="container py-4">
+        <h3 class="mb-3" th:text="${pageTitle}">Tạo thanh toán</h3>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form th:action="@{/payments}" th:object="${form}" method="post" class="row g-3">
+
+                    <!-- ========== Hàng 1: Khách hàng / Khuyến mãi / PTTT ========== -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Khách hàng</label>
+                        <select class="form-select" th:field="*{customerId}" required>
+                            <option disabled selected value="">-- Chọn khách hàng --</option>
+                            <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.name}"></option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Khuyến mãi</label>
+                        <select class="form-select" th:field="*{promotionId}">
+                            <option th:value="${null}">-- Không áp dụng --</option>
+                            <option th:each="p : ${promotions}" th:value="${p.id}"
+                                    th:text="${p.code + ' - ' + p.name + ' (' + p.percent + '%)'}"></option>
+                        </select>
+                        <div class="form-text">
+                            <a th:href="@{/promotions}" target="_blank">Xem/Thêm khuyến mãi &raquo;</a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Phương thức thanh toán</label>
+                        <select class="form-select" th:field="*{method}" required>
+                            <option disabled selected value="">-- Chọn phương thức --</option>
+                            <option th:each="m : ${methods}" th:value="${m}" th:text="${m}"></option>
+                        </select>
+                    </div>
+
+                    <!-- ========== Hàng 2: Ngày giờ thanh toán ========== -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Ngày giờ thanh toán</label>
+                        <input class="form-control" type="datetime-local" th:field="*{paidAt}">
+                    </div>
+
+                    <!-- ========== Accordion chọn dịch vụ và sản phẩm ========== -->
+                    <div class="col-12">
+                        <div class="accordion" id="pickAccordion">
+
+                            <!-- ===== DỊCH VỤ ===== -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingServices">
+                                    <button class="accordion-button collapsed d-flex justify-content-between" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#collapseServices" aria-expanded="false"
+                                            aria-controls="collapseServices">
+                                        <span><i class="fa-solid fa-scissors me-2"></i>Dịch vụ</span>
+                                        <span class="ms-auto badge bg-secondary" id="svcCount">0 đã chọn</span>
+                                    </button>
+                                </h2>
+                                <div id="collapseServices" class="accordion-collapse collapse"
+                                     aria-labelledby="headingServices" data-bs-parent="#pickAccordion">
+                                    <div class="accordion-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="svcCheckAll">
+                                                <label class="form-check-label" for="svcCheckAll">Chọn tất cả</label>
+                                            </div>
+                                            <a class="small" th:href="@{/services}" target="_blank">Xem/Thêm dịch vụ &raquo;</a>
+                                        </div>
+
+                                        <div class="row row-cols-1 row-cols-md-2 g-2">
+                                            <div class="col" th:each="s : ${services}">
+                                                <div class="form-check border rounded p-2 h-100">
+                                                    <input class="form-check-input svc-item" type="checkbox"
+                                                           th:id="'svc-' + ${s.id}" name="serviceIds"
+                                                           th:value="${s.id}">
+                                                    <label class="form-check-label ms-2" th:for="'svc-' + ${s.id}">
+                                                        <span class="fw-semibold" th:text="${s.name}">Tên DV</span>
+                                                        <span class="text-muted"> - </span>
+                                                        <span class="text-muted" th:text="${#numbers.formatDecimal(s.price,0,'COMMA',0,'POINT')} + ' VND'">0</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ===== SẢN PHẨM SỬ DỤNG ===== -->
+                            <div class="accordion-item mt-3">
+                                <h2 class="accordion-header" id="headingProducts">
+                                    <button class="accordion-button collapsed d-flex justify-content-between" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#collapseProducts" aria-expanded="false"
+                                            aria-controls="collapseProducts">
+                                        <span><i class="fa-solid fa-pump-soap me-2"></i>Sản phẩm sử dụng</span>
+                                        <span class="ms-auto badge bg-secondary" id="prdCount">0 đã chọn</span>
+                                    </button>
+                                </h2>
+                                <div id="collapseProducts" class="accordion-collapse collapse"
+                                     aria-labelledby="headingProducts" data-bs-parent="#pickAccordion">
+                                    <div class="accordion-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="prdCheckAll">
+                                                <label class="form-check-label" for="prdCheckAll">Chọn tất cả</label>
+                                            </div>
+                                            <a class="small" th:href="@{/productusage}" target="_blank">Xem/Thêm sản phẩm &raquo;</a>
+                                        </div>
+
+                                        <div class="row row-cols-1 row-cols-md-2 g-2">
+                                            <div class="col" th:each="p : ${products}">
+                                                <div class="form-check border rounded p-2 h-100">
+                                                    <input class="form-check-input prd-item" type="checkbox"
+                                                           th:id="'prd-' + ${p.id}" name="productIds"
+                                                           th:value="${p.id}">
+                                                    <label class="form-check-label ms-2" th:for="'prd-' + ${p.id}">
+                                                        <span class="fw-semibold" th:text="${p.productName}">Tên SP</span>
+                                                        <span class="text-muted"> — Mã DV: </span>
+                                                        <span class="text-muted" th:text="${p.serviceCode}">DV001</span>
+                                                        <br/>
+                                                        <small class="text-muted">
+                                                            <span th:text="${#numbers.formatDecimal(p.price,0,'COMMA',0,'POINT')} + ' VND'">0</span>
+                                                            <span> × </span>
+                                                            <span th:text="${p.quantityUsed}">1</span>
+                                                        </small>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div> <!-- /accordion -->
+                    </div>
+
+                    <!-- ========== Nút hành động ========== -->
+                    <div class="col-12 d-flex gap-2 mt-3">
+                        <button class="btn btn-salon" type="submit">
+                            <i class="fa-solid fa-floppy-disk me-1"></i>Lưu
+                        </button>
+                        <a class="btn btn-outline-secondary" th:href="@{/payments}">
+                            <i class="fa-solid fa-arrow-left me-1"></i>Hủy
+                        </a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<div th:replace="~{fragments/common :: scripts}"></div>
+
+<!-- ========== Script cập nhật badge đếm & chọn tất cả ========== -->
+<script>
+    (function () {
+        function updateCount(selector, badgeId) {
+            const count = document.querySelectorAll(selector + ':checked').length;
+            const badge = document.getElementById(badgeId);
+            if (badge) badge.textContent = count + ' đã chọn';
+        }
+
+        document.addEventListener('change', function (e) {
+            if (e.target.classList.contains('svc-item')) {
+                updateCount('.svc-item', 'svcCount');
+            }
+            if (e.target.classList.contains('prd-item')) {
+                updateCount('.prd-item', 'prdCount');
+            }
+            if (e.target.id === 'svcCheckAll') {
+                document.querySelectorAll('.svc-item').forEach(cb => cb.checked = e.target.checked);
+                updateCount('.svc-item', 'svcCount');
+            }
+            if (e.target.id === 'prdCheckAll') {
+                document.querySelectorAll('.prd-item').forEach(cb => cb.checked = e.target.checked);
+                updateCount('.prd-item', 'prdCount');
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', function () {
+            updateCount('.svc-item', 'svcCount');
+            updateCount('.prd-item', 'prdCount');
+        });
+    })();
+</script>
+
+</body>
+</html>
+dc'
+cd
+4'
