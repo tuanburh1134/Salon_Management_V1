@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 @Data
 public class BookingForm {
     private Long id;
+    
+    private String bookingCode; // Mã đặt lịch (read-only)
 
     @NotNull(message = "Vui lòng chọn khách hàng")
     private Long customerId;
@@ -34,6 +36,7 @@ public class BookingForm {
     public static BookingForm from(com.example.salon_management.entity.Booking booking) {
         BookingForm form = new BookingForm();
         form.setId(booking.getId());
+        form.setBookingCode(booking.getBookingCode());
         form.setCustomerId(booking.getCustomer().getId());
         form.setServiceId(booking.getService().getId());
         form.setBookingDateTime(booking.getBookingDateTime());

@@ -13,6 +13,6 @@ public class EmployeeSearchRequest {
     private int page = 0;
     private int size = 10;
 
-    private String sortBy = "name"; // Cột sắp xếp mặc định
-    private String sortDir = "asc"; // Hướng sắp xếp mặc định
+    private String sortBy = "id"; // Cột sắp xếp mặc định
+    private String sortDir = "desc"; // Hướng sắp xếp mặc định
 }

@@ -1,39 +1,301 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/common :: head}"><title>Khuyến mãi</title></head>
-<body>
-<nav th:replace="~{fragments/common :: navigation}"></nav>
+<head>
+    <th:block th:replace="fragments/common :: head"></th:block>
+    <title>Quản lý khuyến mãi</title>
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center">
-        <h3 class="fw-bold">Danh sách khuyến mãi</h3>
-        <a class="btn btn-primary" th:href="@{/promotions/new}">Thêm khuyến mãi</a>
-    </div>
-    <div class="card mt-3">
-        <div class="card-body table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                <tr>
-                    <th>STT</th><th>Mã</th><th>Tên</th><th>%</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="p, i : ${promotions}">
-                    <td th:text="${i.count}"></td>
-                    <td th:text="${p.code}"></td>
-                    <td th:text="${p.name}"></td>
-                    <td th:text="${p.percent}"></td>
-                    <td th:text="${p.startAt}"></td>
-                    <td th:text="${p.endAt}"></td>
-                    <td th:text="${p.status}"></td>
-                </tr>
-                </tbody>
-            </table>
+    <style>
+        /* === Sticky Footer === */
+        html, body { height: 100%; margin: 0; }
+        body { display: flex; flex-direction: column; min-height: 100vh; background: #f8f9fa; }
+        main { flex: 1; }
+        footer {
+            margin-top: auto; background: #fff; border-top: 1px solid #dee2e6;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05); text-align: center; padding: 12px 0;
+            position: relative; bottom: 0; width: 100%;
+        }
+
+        /* === Style trang === */
+        .page-header{
+            background: linear-gradient(90deg, #6f42c1, #8b5cf6);
+            color:#fff; padding:32px 0; margin-bottom:24px;
+            box-shadow: 0 3px 8px rgba(0,0,0,.1);
+        }
+        .card{ border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); overflow:hidden; }
+        .btn-salon{
+            background: linear-gradient(135deg,#6f42c1,#8b5cf6); color:#fff; border:none; border-radius:8px;
+            box-shadow: 0 4px 12px rgba(111,66,193,.25); transition: all .2s ease;
+        }
+        .btn-salon:hover{ transform: translateY(-1px); box-shadow:0 6px 18px rgba(111,66,193,.35); }
+        .table thead{ background:#343a40; color:#fff; }
+
+        /* Status badges */
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .badge-type {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Sortable column styles */
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease;
+        }
+        .sortable:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sortable i {
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+        .sortable:hover i {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+<!-- Header chung -->
+<header th:replace="fragments/common :: header"></header>
+
+<!-- Đặt NAV và MAIN cùng một hàng để không bị đẩy xuống -->
+<div class="d-flex flex-grow-1">
+    <nav th:replace="fragments/common :: navigation"></nav>
+
+    <main class="flex-fill">
+        <div class="page-header">
+            <div class="container">
+                <h1 class="mb-0"><i class="fa-solid fa-gift me-2"></i>Quản lý khuyến mãi</h1>
+                <p class="mb-0 mt-2">Danh sách khuyến mãi tại salon</p>
+            </div>
         </div>
-    </div>
+
+        <div class="container">
+            <!-- Flash messages -->
+            <div th:if="${msg}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i><span th:text="${msg}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-exclamation me-2"></i><span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Bộ lọc -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form id="searchForm" class="row g-3 align-items-end" th:action="@{/promotions}" method="get">
+                        <input type="hidden" name="sortField" th:value="${sortField ?: 'id'}">
+                        <input type="hidden" name="sortDir" th:value="${sortDir ?: 'asc'}">
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                <i class="fa-solid fa-magnifying-glass me-1"></i>Từ khóa
+                            </label>
+                            <input class="form-control" name="keyword" placeholder="Nhập tên hoặc mã khuyến mãi..." th:value="${keyword}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" name="status" th:value="${status}">
+                                <option value="">Tất cả</option>
+                                <option value="ACTIVE">Đang hoạt động</option>
+                                <option value="INACTIVE">Ngừng hoạt động</option>
+                                <option value="EXPIRED">Đã hết hạn</option>
+                                <option value="UPCOMING">Sắp diễn ra</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Loại</label>
+                            <select class="form-select" name="type" th:value="${type}">
+                                <option value="">Tất cả loại</option>
+                                <option value="ALL_CUSTOMERS">Tất cả khách hàng</option>
+                                <option value="NEW_CUSTOMER">Khách hàng mới</option>
+                                <option value="LOYAL_CUSTOMER">Khách hàng thân thiết</option>
+                                <option value="SPECIAL_CUSTOMER">Khách hàng đặc biệt</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Khoảng ngày</label>
+                            <div class="input-group input-group-sm">
+                                <input type="date" class="form-control" name="startDate" th:value="${startDate}">
+                                <span class="input-group-text">→</span>
+                                <input type="date" class="form-control" name="endDate" th:value="${endDate}">
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button class="btn btn-salon" type="submit">
+                                <i class="fa-solid fa-search me-1"></i>Tìm
+                            </button>
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <a class="btn btn-outline-secondary" th:href="@{/promotions}">
+                                <i class="fa-solid fa-xmark me-1"></i>Clear
+                            </a>
+                        </div>
+                        <div class="col-md-2 d-grid ms-auto">
+                            <a class="btn btn-primary" th:href="@{/promotions/new}">
+                                <i class="fa-solid fa-plus me-1"></i>Thêm khuyến mãi
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+            <!-- Bảng danh sách -->
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-dark">
+                            <tr>
+                                <th style="width:80px">STT</th>
+                                <th style="width:200px" class="sortable">
+                                    <a th:href="@{/promotions(keyword=${keyword}, status=${status}, type=${type}, startDate=${startDate}, endDate=${endDate}, page=0, sortField='name', sortDir=${(sortField == null or sortField == 'name') && sortDir == 'asc' ? 'desc' : 'asc'})}"
+                                       class="text-white text-decoration-none">
+                                        Tên khuyến mãi
+                                        <i class="fa-solid fa-sort ms-1"
+                                           th:classappend="${sortField == 'name' and sortDir == 'asc'} ? 'fa-sort-up' :
+                                                           (${sortField == 'name' and sortDir == 'desc'} ? 'fa-sort-down' : 'fa-sort')"></i>
+                                    </a>
+                                </th>
+                                <th style="width:100px" class="sortable text-center">
+                                    <a th:href="@{/promotions(keyword=${keyword}, status=${status}, type=${type}, startDate=${startDate}, endDate=${endDate}, page=0, sortField='percent', sortDir=${(sortField == null or sortField == 'percent') && sortDir == 'asc' ? 'desc' : 'asc'})}"
+                                       class="text-white text-decoration-none">
+                                        Phần trăm
+                                        <i class="fa-solid fa-sort ms-1"
+                                           th:classappend="${sortField == 'percent' and sortDir == 'asc'} ? 'fa-sort-up' :
+                                                           (${sortField == 'percent' and sortDir == 'desc'} ? 'fa-sort-down' : 'fa-sort')"></i>
+                                    </a>
+                                </th>
+                                <th style="width:140px">Loại</th>
+                                <th style="width:120px" class="sortable">
+                                    <a th:href="@{/promotions(keyword=${keyword}, status=${status}, type=${type}, startDate=${startDate}, endDate=${endDate}, page=0, sortField='startAt', sortDir=${(sortField == null or sortField == 'startAt') && sortDir == 'asc' ? 'desc' : 'asc'})}"
+                                       class="text-white text-decoration-none">
+                                        Bắt đầu
+                                        <i class="fa-solid fa-sort ms-1"
+                                           th:classappend="${sortField == 'startAt' and sortDir == 'asc'} ? 'fa-sort-up' :
+                                                           (${sortField == 'startAt' and sortDir == 'desc'} ? 'fa-sort-down' : 'fa-sort')"></i>
+                                    </a>
+                                </th>
+                                <th style="width:120px" class="sortable">
+                                    <a th:href="@{/promotions(keyword=${keyword}, status=${status}, type=${type}, startDate=${startDate}, endDate=${endDate}, page=0, sortField='endAt', sortDir=${(sortField == null or sortField == 'endAt') && sortDir == 'asc' ? 'desc' : 'asc'})}"
+                                       class="text-white text-decoration-none">
+                                        Kết thúc
+                                        <i class="fa-solid fa-sort ms-1"
+                                           th:classappend="${sortField == 'endAt' and sortDir == 'asc'} ? 'fa-sort-up' :
+                                                           (${sortField == 'endAt' and sortDir == 'desc'} ? 'fa-sort-down' : 'fa-sort')"></i>
+                                    </a>
+                                </th>
+                                <th style="width:130px" class="text-center sortable">
+                                    <a th:href="@{/promotions(keyword=${keyword}, status=${status}, type=${type}, startDate=${startDate}, endDate=${endDate}, page=0, sortField='status', sortDir=${(sortField == null or sortField == 'status') && sortDir == 'asc' ? 'desc' : 'asc'})}"
+                                       class="text-white text-decoration-none">
+                                        Trạng thái
+                                        <i class="fa-solid fa-sort ms-1"
+                                           th:classappend="${sortField == 'status' and sortDir == 'asc'} ? 'fa-sort-up' :
+                                                           (${sortField == 'status' and sortDir == 'desc'} ? 'fa-sort-down' : 'fa-sort')"></i>
+                                    </a>
+                                </th>
+                                <th style="width:170px" class="text-end">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:if="${promotions.totalElements == 0}">
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    <i class="fa-regular fa-inbox fa-2x mb-2"></i><br>Không có dữ liệu
+                                </td>
+                            </tr>
+
+                            <tr th:each="p, iter : ${promotions.content}">
+                                <td><span class="badge bg-secondary" th:text="${promotions.number * promotions.size + iter.index + 1}">1</span></td>
+                                <td><strong th:text="${p.name}"></strong></td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger" th:text="${p.percent} + '%'"></span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info" th:text="${p.type.vietnameseName}"></span>
+                                </td>
+                                <td th:text="${#temporals.format(p.startAt, 'dd/MM/yyyy')}"></td>
+                                <td th:text="${#temporals.format(p.endAt, 'dd/MM/yyyy')}"></td>
+                                <td class="text-center">
+                                    <span th:if="${p.status != null}" th:switch="${p.status.name()}">
+                                        <span th:case="ACTIVE" class="badge bg-success">Đang hoạt động</span>
+                                        <span th:case="INACTIVE" class="badge bg-secondary">Ngừng hoạt động</span>
+                                        <span th:case="EXPIRED" class="badge bg-danger">Đã hết hạn</span>
+                                        <span th:case="UPCOMING" class="badge bg-warning text-dark">Sắp diễn ra</span>
+                                        <span th:case="*" class="badge bg-light text-dark" th:text="${p.status.name()}"></span>
+                                    </span>
+                                    <span th:if="${p.status == null}" class="badge bg-secondary">Chưa xác định</span>
+                                </td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-warning" th:href="@{|/promotions/${p.id}/edit|}" title="Chỉnh sửa">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </a>
+                                    <form th:action="@{|/promotions/${p.id}/delete|}" method="post" class="d-inline"
+                                          onsubmit="return confirm('Xóa khuyến mãi này?');">
+                                        <input type="hidden" th:if="${_csrf != null}"
+                                               th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" title="Xóa">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phân trang -->
+            <div th:if="${promotions.totalPages > 1}" class="card mt-3">
+                <div class="card-body">
+                    <nav aria-label="pagination">
+                        <ul class="pagination justify-content-center mb-0">
+                            <li class="page-item" th:classappend="${promotions.first} ? 'disabled'">
+                                <a class="page-link" th:href="@{/promotions(page=0, keyword=${keyword}, status=${status}, type=${type}, startDate=${startDate}, endDate=${endDate}, sortField=${sortField}, sortDir=${sortDir})}">
+                                    <i class="fa-solid fa-angles-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item" th:classappend="${promotions.first} ? 'disabled'">
+                                <a class="page-link" th:href="@{/promotions(page=${promotions.number - 1}, keyword=${keyword}, status=${status}, type=${type}, startDate=${startDate}, endDate=${endDate}, sortField=${sortField}, sortDir=${sortDir})}">
+                                    <i class="fa-solid fa-angle-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, promotions.totalPages - 1)}"
+                                th:classappend="${i == promotions.number} ? 'active'">
+                                <a class="page-link" th:text="${i + 1}"
+                                   th:href="@{/promotions(page=${i}, keyword=${keyword}, status=${status}, type=${type}, startDate=${startDate}, endDate=${endDate}, sortField=${sortField}, sortDir=${sortDir})}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${promotions.last} ? 'disabled'">
+                                <a class="page-link" th:href="@{/promotions(page=${promotions.number + 1}, keyword=${keyword}, status=${status}, type=${type}, startDate=${startDate}, endDate=${endDate}, sortField=${sortField}, sortDir=${sortDir})}">
+                                    <i class="fa-solid fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item" th:classappend="${promotions.last} ? 'disabled'">
+                                <a class="page-link" th:href="@{/promotions(page=${promotions.totalPages - 1}, keyword=${keyword}, status=${status}, type=${type}, startDate=${startDate}, endDate=${endDate}, sortField=${sortField}, sortDir=${sortDir})}">
+                                    <i class="fa-solid fa-angles-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+        </div>
+    </main>
 </div>
 
-<footer th:replace="~{fragments/common :: footer}"></footer>
-<div th:replace="~{fragments/common :: scripts}"></div>
+<footer th:replace="fragments/common :: footer"></footer>
+<div th:replace="fragments/common :: scripts"></div>
 </body>
 </html>

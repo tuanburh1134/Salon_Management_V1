@@ -28,15 +28,15 @@
 <th:block th:fragment="toastContainer">
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1080">
         <div id="globalToast"
-             class="toast align-items-center border-0 shadow"
+             class="toast align-items-center border-0 shadow bg-success text-white"
              role="alert" aria-live="assertive" aria-atomic="true"
-             data-bs-autohide="true" data-bs-delay="6000">
+             data-bs-autohide="true" data-bs-delay="4000">
             <div class="d-flex">
                 <div class="toast-body">
                     <strong id="toastTitle">Thành công</strong>
-                    <div id="toastMessage" class="small text-muted">Hành động đã được thực hiện.</div>
+                    <div id="toastMessage" class="small">Hành động đã được thực hiện.</div>
                 </div>
-                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Đóng"></button>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Đóng"></button>
             </div>
         </div>
     </div>
@@ -78,8 +78,14 @@
                     e.preventDefault();
 
                     const title = target.getAttribute('data-confirm-title') || 'Xác nhận';
-                    const body  = target.getAttribute('data-confirm-body')  || 'Bạn có chắc muốn thực hiện?';
+                    let body  = target.getAttribute('data-confirm-body')  || 'Bạn có chắc muốn thực hiện?';
                     const okTxt = target.getAttribute('data-confirm-submit-text') || 'Đồng ý';
+
+                    // Xử lý tên nhân viên nếu có
+                    const employeeName = target.getAttribute('data-employee-name');
+                    if (employeeName && body.includes('nhân viên này')) {
+                        body = body.replace('nhân viên này', `nhân viên "${employeeName}"`);
+                    }
 
                     document.getElementById('confirmModalTitle').textContent = title;
                     document.getElementById('confirmModalBody').textContent  = body;
@@ -105,23 +111,13 @@
             // ===== Toast success =====
             const toastEl = document.getElementById('globalToast');
             if (toastEl && window.bootstrap) {
-                const url = new URL(window.location.href);
-                const ok = url.searchParams.get('ok'); // created|updated|deleted
-
-                // Nếu controller set flash attribute thì lấy ở đây:
+                // Lấy flash attributes từ Thymeleaf
                 let mTitle = /*[[${successTitle}]]*/ null;
-                let mMsg   = /*[[${successMessage}]]*/ null;
-
-                // Fallback theo query param
-                if (!mTitle && ok) {
-                    if (ok === 'created') { mTitle = 'Tạo thành công'; mMsg = 'Bạn đã tạo mới thành công.'; }
-                    if (ok === 'updated') { mTitle = 'Sửa thành công';  mMsg = 'Bạn đã cập nhật thành công.'; }
-                    if (ok === 'deleted') { mTitle = 'Xoá thành công';  mMsg = 'Bạn đã xoá thành công.'; }
-                }
+                let mMsg = /*[[${successMessage}]]*/ null;
 
                 if (mTitle || mMsg) {
                     if (mTitle) document.getElementById('toastTitle').textContent = mTitle;
-                    if (mMsg)   document.getElementById('toastMessage').textContent = mMsg;
+                    if (mMsg) document.getElementById('toastMessage').textContent = mMsg;
                     new bootstrap.Toast(toastEl, { delay: 6000, autohide: true }).show();
                 }
             }

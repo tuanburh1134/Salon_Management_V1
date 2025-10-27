@@ -65,7 +65,7 @@ public class EmployeeController {
 
     @PostMapping("/create")
     public String create(@Valid @ModelAttribute("employee") Employee e, BindingResult br,
-                         @RequestParam("photo") MultipartFile photo, RedirectAttributes ra, Model model) throws IOException {
+                         @RequestParam(value = "photo", required = false) MultipartFile photo, RedirectAttributes ra, Model model) throws IOException {
 
         // Kiểm tra các validation cơ bản (@NotBlank, @Min,...)
         if (br.hasErrors()) {
@@ -95,7 +95,7 @@ public class EmployeeController {
         }
 
         // Xử lý upload ảnh
-        if (!photo.isEmpty()) {
+        if (photo != null && !photo.isEmpty()) {
             try {
                 String fileName = UUID.randomUUID().toString() + "_" + photo.getOriginalFilename();
                 Path path = Paths.get(UPLOAD_DIR + fileName);
@@ -109,12 +109,14 @@ public class EmployeeController {
         }
 
         service.create(e);
-        ra.addFlashAttribute("msg", "Thêm nhân viên thành công!");
+        ra.addFlashAttribute("successTitle", "Thêm thành công");
+        ra.addFlashAttribute("successMessage", "Đã thêm nhân viên \"" + e.getName() + "\" thành công.");
         return "redirect:/employees";
     }
 
+
     @GetMapping("/{id}/edit")
-    public String editForm(@PathVariable Long id, Model model) {
+    public String editForm(@PathVariable("id") Long id, Model model) {
         model.addAttribute("employee", service.get(id));
         model.addAttribute("pageTitle", "Chỉnh sửa nhân viên");
         model.addAttribute("formAction", "/employees/" + id + "/edit");
@@ -123,7 +125,7 @@ public class EmployeeController {
 
     @PostMapping("/{id}/edit")
     public String update(@PathVariable Long id, @Valid @ModelAttribute("employee") Employee e,
-                         BindingResult br, @RequestParam("photo") MultipartFile photo,
+                         BindingResult br, @RequestParam(value = "photo", required = false) MultipartFile photo,
                          RedirectAttributes ra, Model model) throws IOException {
 
         if (br.hasErrors()) {
@@ -139,6 +141,12 @@ public class EmployeeController {
         if (repository.existsByPhoneAndIdNot(e.getPhone(), id)) {
             br.rejectValue("phone", "error.employee", "Số điện thoại này đã được sử dụng bởi một nhân viên khác.");
         }
+        if (e.getDateOfBirth() != null) {
+            int year = e.getDateOfBirth().getYear();
+            if (year < 1700 || year > 2007) {
+                br.rejectValue("dateOfBirth", "error.employee", "Năm sinh phải trong khoảng từ 1700 đến 2007.");
+            }
+        }
 
         if (br.hasErrors()) {
             model.addAttribute("pageTitle", "Chỉnh sửa nhân viên");
@@ -147,7 +155,7 @@ public class EmployeeController {
         }
 
         // Xử lý upload ảnh
-        if (!photo.isEmpty()) {
+        if (photo != null && !photo.isEmpty()) {
             try {
                 String fileName = UUID.randomUUID().toString() + "_" + photo.getOriginalFilename();
                 Path path = Paths.get(UPLOAD_DIR + fileName);
@@ -164,38 +172,43 @@ public class EmployeeController {
         }
 
         service.update(id, e);
-        ra.addFlashAttribute("msg", "Cập nhật nhân viên thành công!");
+        ra.addFlashAttribute("successTitle", "Cập nhật thành công");
+        ra.addFlashAttribute("successMessage", "Đã cập nhật thông tin nhân viên \"" + e.getName() + "\" thành công.");
         return "redirect:/employees";
     }
 
+    // File: EmployeeController.java
+
     @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Long id,
-                         @RequestParam(value = "keyword", required = false) String keyword,
-                         @RequestParam(value = "position", required = false) String position,
-                         @RequestParam(value = "shift", required = false) String shift,
-                         @RequestParam(value = "specialty", required = false) String specialty,
-                         @RequestParam(value = "page", defaultValue = "0") int page,
-                         @RequestParam(value = "size", defaultValue = "10") int size,
+// Sửa lại toàn bộ tham số thành @ModelAttribute
+    public String delete(@PathVariable("id") Long id,
+                         @ModelAttribute("q") EmployeeSearchRequest q,
                          RedirectAttributes ra) {
         try {
+            Employee employee = service.get(id);
             service.delete(id);
-            ra.addFlashAttribute("msg", "Đã xoá nhân viên thành công!");
+            ra.addFlashAttribute("successTitle", "Xóa thành công");
+            ra.addFlashAttribute("successMessage", "Đã xóa nhân viên \"" + employee.getName() + "\" thành công.");
         } catch (Exception ex) {
-            ra.addFlashAttribute("msg", "Lỗi khi xoá nhân viên: " + ex.getMessage());
+            ra.addFlashAttribute("successTitle", "Không thể xóa");
+            ra.addFlashAttribute("successMessage", "Có lỗi xảy ra khi xóa: " + ex.getMessage());
         }
-
+        
         UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/employees")
-                .queryParam("keyword", keyword)
-                .queryParam("position", position)
-                .queryParam("shift", shift)
-                .queryParam("specialty", specialty)
-                .queryParam("page", page)
-                .queryParam("size", size);
+                .queryParam("keyword", q.getKeyword())
+                .queryParam("position", q.getPosition())
+                .queryParam("shift", q.getShift())
+                .queryParam("specialty", q.getSpecialty())
+                .queryParam("page", q.getPage())
+                .queryParam("size", q.getSize())
+                .queryParam("sortBy", q.getSortBy()) // Thêm cả sortBy
+                .queryParam("sortDir", q.getSortDir()); // và sortDir để giữ trạng thái sắp xếp
+
         return "redirect:" + builder.toUriString();
     }
 
     @GetMapping("/{id}/detail")
-    public String detail(@PathVariable Long id, Model model) {
+    public String detail(@PathVariable("id") Long id, Model model) {
         Employee employee = service.get(id);
         model.addAttribute("employee", employee);
         model.addAttribute("pageTitle", "Chi tiết nhân viên: " + employee.getName());

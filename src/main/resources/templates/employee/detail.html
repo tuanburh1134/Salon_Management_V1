@@ -1,41 +1,67 @@
+
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <th:block th:replace="~{fragments/common :: head}"></th:block>
+    <th:block th:replace="fragments/common :: head"></th:block>
 
     <title th:text="${pageTitle}">Chi tiết nhân viên</title>
 
     <style>
+        html, body { height: 100%; margin: 0; }
+        body { display: flex; flex-direction: column; min-height: 100vh; background: #f8f9fa; }
+        main { flex: 1; }
+        footer {
+            margin-top: auto; background: #fff; border-top: 1px solid #dee2e6;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05); text-align: center; padding: 12px 0;
+            position: relative; bottom: 0; width: 100%;
+        }
+
+        .page-header {
+            background: linear-gradient(90deg, #ffd700, #ffcc00);
+            color: #fff; padding: 32px 0; margin-bottom: 24px;
+            box-shadow: 0 3px 8px rgba(0,0,0,.1);
+        }
+
         .detail-card {
             background: #fff;
             border-radius: 12px;
-            padding: 20px;
+            padding: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
         }
 
         .detail-card img {
             max-width: 200px;
-            border-radius: 8px;
+            border-radius: 50%;
         }
 
         .detail-label {
             font-weight: 600;
             color: #343a40;
         }
+        .detail-card .row span {
+            color: #212529;
+            display: block;
+        }
     </style>
 </head>
-<body>
-<nav th:replace="~{fragments/common :: navigation}"></nav>
-<main>
-    <div class="page-header">
-        <div class="container">
-            <h1 class="mb-0"><i class="fa-solid fa-user-tie me-2"></i><span th:text="${pageTitle}"></span></h1>
-            <p class="mb-0 mt-2">Thông tin chi tiết nhân viên</p>
+
+<body class="d-flex flex-column min-vh-100">
+<header th:replace="fragments/common :: header"></header>
+
+<div class="d-flex flex-grow-1">
+    <nav th:replace="fragments/common :: navigation"></nav>
+
+    <main class="flex-fill">
+        <div class="page-header">
+            <div class="container">
+                <h1 class="mb-0"><i class="fa-solid fa-user-tie me-2"></i><span th:text="${pageTitle}"></span></h1>
+                <p class="mb-0 mt-2">Thông tin chi tiết nhân viên</p>
+            </div>
         </div>
-    </div>
-    <div class="container py-4">
+
+        <div class="container py-4">
         <div class="detail-card">
             <div class="text-center mb-4">
                 <img th:if="${employee.photoPath != null}"
@@ -101,8 +127,14 @@
             </div>
         </div>
     </div>
-</main>
-<footer th:replace="~{fragments/common :: footer}"></footer>
-<div th:replace="~{fragments/common :: scripts}"></div>
+    </main>
+</div>
+
+<footer th:replace="fragments/common :: footer"></footer>
+<div th:replace="fragments/common :: scripts"></div>
 </body>
 </html>
+
+
+
+
