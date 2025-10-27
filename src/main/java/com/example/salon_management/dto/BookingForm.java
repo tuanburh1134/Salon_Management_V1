@@ -1,6 +1,8 @@
 package com.example.salon_management.dto;
 
 
+
+import com.example.salon_management.validation.FutureDateTime;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -16,7 +18,9 @@ public class BookingForm {
     @NotNull(message = "Vui lòng chọn dịch vụ")
     private Long serviceId;
 
-
+    @NotNull(message = "Vui lòng chọn thời gian đặt lịch")
+    @FutureDateTime(message = "Thời gian đặt lịch phải trước 1 tiếng", hours = 1)
+    private LocalDateTime bookingDateTime;
 
     @NotNull(message = "Vui lòng chọn nhân viên")
     private Long employeeId;
@@ -32,10 +36,10 @@ public class BookingForm {
         form.setId(booking.getId());
         form.setCustomerId(booking.getCustomer().getId());
         form.setServiceId(booking.getService().getId());
+        form.setBookingDateTime(booking.getBookingDateTime());
         form.setEmployeeId(booking.getEmployee().getId());
         form.setStatus(booking.getStatus());
         form.setNotes(booking.getNotes());
         return form;
     }
 }
-

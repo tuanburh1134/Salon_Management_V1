@@ -92,9 +92,11 @@
                     <div class="col-md-6">
                         <label class="form-label">Ngày giờ đặt lịch <span class="text-danger">*</span></label>
                         <input class="form-control"
+                               th:field="*{bookingDateTime}"
                                type="datetime-local"
                                id="bookingDateTime"
                                min="">
+                        <small class="text-danger" th:errors="*{bookingDateTime}"></small>
                         <small class="text-muted">Thời gian đặt lịch phải ít nhất 1 giờ trong tương lai</small>
                     </div>
 
