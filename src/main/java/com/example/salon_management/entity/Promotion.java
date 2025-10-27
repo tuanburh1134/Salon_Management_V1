@@ -1,80 +1,141 @@
 package com.example.salon_management.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "promotions")
+@Table(name = "promotion")
 public class Promotion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id_promotion")
+    private Integer id;
 
-    @Column(length = 50)
+    @Column(name = "code", length = 50, nullable = false, unique = true)
     private String code;
 
-    @NotBlank
-    @Column(nullable = false, length = 150)
+    @Column(name = "name", length = 100, nullable = false)
     private String name;
 
-    // Cột đang dùng thật sự
-    @Min(1) @Max(100)
-    @Column(name = "discount_percent", nullable = false)
-    private Integer percent;
+    @Column(name = "percent", precision = 5, scale = 2, nullable = false)
+    private BigDecimal percent;
 
-    // ✅ Thêm field "legacy" để lấp cột percent còn đang NOT NULL trong DB
-    // Không dùng ở code, chỉ để đồng bộ khi insert/update cho khỏi lỗi DB
-    @Column(name = "percent")
-    private Integer legacyPercent;
+    @Column(name = "start_at", nullable = false)
+    private LocalDate startAt;
 
-    @Column(name = "start_at")
-    private LocalDateTime startAt;
+    @Column(name = "end_at", nullable = false)
+    private LocalDate endAt;
 
-    @Column(name = "end_at")
-    private LocalDateTime endAt;
+    @Column(name = "description", length = 255)
+    private String description;
 
-    @Column(name = "active", nullable = false)
-    private Boolean active;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private PromotionStatus status;
 
-    @Transient
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false, length = 20)
+    private PromotionType type;
 
-    @PrePersist
-    public void prePersist() {
-        if (active == null) active = Boolean.TRUE;
-        normalizePercent();
+    // ===== Constructors =====
+    public Promotion() {}
+
+    public Promotion(String code, String name, BigDecimal percent, LocalDate startAt,
+                     LocalDate endAt, String description, PromotionStatus status, PromotionType type) {
+        this.code = code;
+        this.name = name;
+        this.percent = percent;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.description = description;
+        this.status = status;
+        this.type = type;
     }
 
-    @PreUpdate
-    public void preUpdate() {
-        normalizePercent();
-    }
+    // ===== Getters & Setters =====
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
-    private void normalizePercent() {
-        if (percent == null || percent < 1) percent = 1;
-        if (percent > 100) percent = 100;
-
-        // ghi đồng thời vào cột 'percent' để DB không kêu thiếu
-        this.legacyPercent = this.percent;
-    }
-
-    // ===== getters & setters =====
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
     public String getCode() { return code; }
     public void setCode(String code) { this.code = code; }
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    public Integer getPercent() { return percent; }
-    public void setPercent(Integer percent) { this.percent = percent; }
-    public LocalDateTime getStartAt() { return startAt; }
-    public void setStartAt(LocalDateTime startAt) { this.startAt = startAt; }
-    public LocalDateTime getEndAt() { return endAt; }
-    public void setEndAt(LocalDateTime endAt) { this.endAt = endAt; }
-    public Boolean getActive() { return active; }
-    public void setActive(Boolean active) { this.active = active; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+
+    public BigDecimal getPercent() { return percent; }
+    public void setPercent(BigDecimal percent) { this.percent = percent; }
+
+    public LocalDate getStartAt() { return startAt; }
+    public void setStartAt(LocalDate startAt) { this.startAt = startAt; }
+
+    public LocalDate getEndAt() { return endAt; }
+    public void setEndAt(LocalDate endAt) { this.endAt = endAt; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public PromotionStatus getStatus() { return status; }
+    public void setStatus(PromotionStatus status) { this.status = status; }
+
+    public PromotionType getType() { return type; }
+    public void setType(PromotionType type) { this.type = type; }
+
+    // ====== BUSINESS LOGIC ======
+    public void refreshStatus() {
+        // Bảo vệ null safety
+        if (this.startAt == null || this.endAt == null) {
+            return; // Không refresh nếu ngày null
+        }
+
+        LocalDate today = LocalDate.now();
+
+        // Chỉ auto-update nếu status là ACTIVE hoặc UPCOMING
+        // Giữ nguyên INACTIVE và EXPIRED (manual status)
+        if (this.status == PromotionStatus.ACTIVE || this.status == PromotionStatus.UPCOMING) {
+            if (today.isBefore(startAt)) {
+                this.status = PromotionStatus.UPCOMING;
+            } else if (today.isAfter(endAt)) {
+                this.status = PromotionStatus.EXPIRED;
+            } else {
+                this.status = PromotionStatus.ACTIVE;
+            }
+        }
+        // Nếu status là null, tính toán lần đầu
+        else if (this.status == null) {
+            if (today.isBefore(startAt)) {
+                this.status = PromotionStatus.UPCOMING;
+            } else if (today.isAfter(endAt)) {
+                this.status = PromotionStatus.EXPIRED;
+            } else {
+                this.status = PromotionStatus.ACTIVE;
+            }
+        }
+    }
+
+    // ===== Enums =====
+    public enum PromotionStatus {
+        ACTIVE,     // Đang hoạt động
+        INACTIVE,   // Ngừng hoạt động thủ công
+        EXPIRED,    // Đã hết hạn
+        UPCOMING    // Sắp diễn ra
+    }
+
+    public enum PromotionType {
+        ALL_CUSTOMERS("Tất cả khách hàng"),
+        NEW_CUSTOMER("Khách hàng mới"),
+        LOYAL_CUSTOMER("Khách hàng thân thiết"),
+        SPECIAL_CUSTOMER("Khách hàng đặc biệt");
+
+        private final String vietnameseName;
+
+        PromotionType(String vietnameseName) {
+            this.vietnameseName = vietnameseName;
+        }
+
+        public String getVietnameseName() {
+            return vietnameseName;
+        }
+    }
 }
