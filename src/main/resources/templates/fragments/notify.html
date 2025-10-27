@@ -1,0 +1,133 @@
+<!-- templates/fragments/notify.html -->
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- ============== CONFIRM MODAL (dùng chung) ============== -->
+<th:block th:fragment="confirmModal">
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-warning-subtle">
+                    <h5 class="modal-title" id="confirmModalTitle">Xác nhận</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body" id="confirmModalBody">
+                    Bạn có chắc muốn thực hiện hành động này?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="button" class="btn btn-warning" id="confirmModalYesBtn">Đồng ý</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- ============== SUCCESS TOAST (dùng chung) ============== -->
+<th:block th:fragment="toastContainer">
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1080">
+        <div id="globalToast"
+             class="toast align-items-center border-0 shadow"
+             role="alert" aria-live="assertive" aria-atomic="true"
+             data-bs-autohide="true" data-bs-delay="6000">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong id="toastTitle">Thành công</strong>
+                    <div id="toastMessage" class="small text-muted">Hành động đã được thực hiện.</div>
+                </div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Đóng"></button>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- (tuỳ chọn) SUCCESS MODAL nếu muốn hiện dialog thay vì toast -->
+<th:block th:fragment="successModal">
+    <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success-subtle">
+                    <h5 class="modal-title">Thành công</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body" id="successModalBody">Hành động thành công.</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- ============== SCRIPT: confirm + toast ============== -->
+<th:block th:fragment="notifyScripts">
+    <script th:inline="javascript">
+        (function () {
+            // ===== Confirm Modal =====
+            const confirmModalEl = document.getElementById('confirmModal');
+            let bsConfirmModal = null, pendingAction = null;
+
+            if (confirmModalEl && window.bootstrap) {
+                bsConfirmModal = new bootstrap.Modal(confirmModalEl);
+
+                document.addEventListener('click', function (e) {
+                    const target = e.target.closest('[data-confirm="true"]');
+                    if (!target) return;
+
+                    e.preventDefault();
+
+                    const title = target.getAttribute('data-confirm-title') || 'Xác nhận';
+                    const body  = target.getAttribute('data-confirm-body')  || 'Bạn có chắc muốn thực hiện?';
+                    const okTxt = target.getAttribute('data-confirm-submit-text') || 'Đồng ý';
+
+                    document.getElementById('confirmModalTitle').textContent = title;
+                    document.getElementById('confirmModalBody').textContent  = body;
+                    document.getElementById('confirmModalYesBtn').textContent = okTxt;
+
+                    pendingAction = target;
+                    bsConfirmModal.show();
+                });
+
+                const yesBtn = document.getElementById('confirmModalYesBtn');
+                if (yesBtn) {
+                    yesBtn.addEventListener('click', function () {
+                        if (!pendingAction) return;
+                        const form = pendingAction.closest('form');
+                        if (form) form.submit();
+                        else if (pendingAction.tagName === 'A' && pendingAction.href) window.location.href = pendingAction.href;
+                        pendingAction = null;
+                        bsConfirmModal.hide();
+                    });
+                }
+            }
+
+            // ===== Toast success =====
+            const toastEl = document.getElementById('globalToast');
+            if (toastEl && window.bootstrap) {
+                const url = new URL(window.location.href);
+                const ok = url.searchParams.get('ok'); // created|updated|deleted
+
+                // Nếu controller set flash attribute thì lấy ở đây:
+                let mTitle = /*[[${successTitle}]]*/ null;
+                let mMsg   = /*[[${successMessage}]]*/ null;
+
+                // Fallback theo query param
+                if (!mTitle && ok) {
+                    if (ok === 'created') { mTitle = 'Tạo thành công'; mMsg = 'Bạn đã tạo mới thành công.'; }
+                    if (ok === 'updated') { mTitle = 'Sửa thành công';  mMsg = 'Bạn đã cập nhật thành công.'; }
+                    if (ok === 'deleted') { mTitle = 'Xoá thành công';  mMsg = 'Bạn đã xoá thành công.'; }
+                }
+
+                if (mTitle || mMsg) {
+                    if (mTitle) document.getElementById('toastTitle').textContent = mTitle;
+                    if (mMsg)   document.getElementById('toastMessage').textContent = mMsg;
+                    new bootstrap.Toast(toastEl, { delay: 6000, autohide: true }).show();
+                }
+            }
+        })();
+    </script>
+</th:block>
+
+</body>
+</html>
