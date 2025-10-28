@@ -149,14 +149,14 @@
                                 <td class="text-end">
                                     <!-- Nút xem -->
                                     <a class="btn btn-sm btn-outline-info me-1"
-                                       th:href="@{|/customers/${c.id}/view|}"
+                                       th:href="@{|/customers/${c.id}/view?q=${q}&memberType=${memberType}&page=${data.number}&size=${data.size}&sortBy=${sortBy}&dir=${dir}|}"
                                        title="Xem chi tiết">
                                         <i class="fa-regular fa-eye"></i>
                                     </a>
 
                                     <!-- Nút sửa -->
                                     <a class="btn btn-sm btn-outline-warning me-1"
-                                       th:href="@{|/customers/${c.id}/edit|}"
+                                       th:href="@{|/customers/${c.id}/edit?q=${q}&memberType=${memberType}&page=${data.number}&size=${data.size}&sortBy=${sortBy}&dir=${dir}|}"
                                        title="Chỉnh sửa">
                                         <i class="fa-regular fa-pen-to-square"></i>
                                     </a>
