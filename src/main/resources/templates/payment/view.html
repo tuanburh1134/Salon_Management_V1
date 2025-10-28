@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/common :: head">
+    <title th:text="${pageTitle} ?: 'Chi tiết thanh toán'">Chi tiết thanh toán</title>
+    <style>
+        /* === Sticky Footer === */
+        html, body { height: 100%; margin: 0; }
+        body { display: flex; flex-direction: column; min-height: 100vh; background: #f8f9fa; }
+        main { flex: 1; }
+        footer {
+            margin-top: auto; background: #fff; border-top: 1px solid #dee2e6;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05); text-align: center; padding: 12px 0;
+        }
+
+        /* === Style trang === */
+        .page-header {
+            background: linear-gradient(90deg, #6f42c1, #8b5cf6);
+            color: #fff;
+            padding: 32px 0;
+            margin-bottom: 24px;
+            box-shadow: 0 3px 8px rgba(0,0,0,.1);
+        }
+        .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.05); overflow: hidden; }
+        .btn-salon {
+            background: linear-gradient(135deg, #6f42c1, #8b5cf6);
+            color: #fff; border: none; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(111,66,193,.25); transition: all .2s ease;
+        }
+        .btn-salon:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(111,66,193,.35); }
+        .info-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,.05); }
+        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { font-weight: 600; color: #495057; }
+        .info-value { color: #212529; }
+        .badge-method {
+            padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 500;
+        }
+        .badge-cash { background: #d4edda; color: #155724; }
+        .badge-bank { background: #d1ecf1; color: #0c5460; }
+        .badge-card { background: #fff3cd; color: #856404; }
+        .badge-wallet { background: #cce5ff; color: #004085; }
+        .amount { font-weight: 600; font-size: 1.1rem; }
+        .amount-total { color: #28a745; font-weight: 700; font-size: 1.2rem; }
+    </style>
+</head>
+
+<body>
+<div th:replace="fragments/common :: header"></div>
+
+<div class="d-flex flex-grow-1">
+    <nav th:replace="fragments/common :: navigation"></nav>
+
+    <main class="flex-fill">
+        <div class="page-header">
+            <div class="container">
+                <h1 class="mb-0"><i class="fa-solid fa-eye me-2"></i>Chi tiết thanh toán</h1>
+                <p class="mb-0 mt-2">Thông tin chi tiết phiếu thanh toán</p>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Flash messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i><span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-exclamation me-2"></i><span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="info-card">
+                        <h5 class="mb-4">
+                            <i class="fa-solid fa-receipt me-2"></i>Thông tin thanh toán
+                        </h5>
+
+                        <div class="info-row">
+                            <span class="info-label">Mã thanh toán:</span>
+                            <span class="info-value">
+                                <span class="badge bg-primary" th:text="${payment.bookingCode}">PM-20251028-104249766</span>
+                            </span>
+                        </div>
+
+                        <div class="info-row">
+                            <span class="info-label">Khách hàng:</span>
+                            <span class="info-value" th:text="${payment.customer != null ? payment.customer.name : 'N/A'}">Nguyễn Đức Tuấn</span>
+                        </div>
+
+                        <div class="info-row">
+                            <span class="info-label">Phương thức thanh toán:</span>
+                            <span class="info-value">
+                                <span th:switch="${payment.method}" class="badge-method">
+                                    <span th:case="CASH" class="badge-cash" th:text="${payment.method.getVietnameseName()}">Tiền mặt</span>
+                                    <span th:case="BANK_TRANSFER" class="badge-bank" th:text="${payment.method.getVietnameseName()}">Chuyển khoản</span>
+                                    <span th:case="CARD" class="badge-card" th:text="${payment.method.getVietnameseName()}">Thẻ</span>
+                                    <span th:case="E_WALLET" class="badge-wallet" th:text="${payment.method.getVietnameseName()}">Ví điện tử</span>
+                                    <span th:case="*" class="badge bg-secondary" th:text="${payment.method.getVietnameseName()}"></span>
+                                </span>
+                            </span>
+                        </div>
+
+                        <div class="info-row">
+                            <span class="info-label">Ngày thanh toán:</span>
+                            <span class="info-value">
+                                <i class="fa-regular fa-clock me-1"></i>
+                                <span th:text="${#temporals.format(payment.paidAt,'dd/MM/yyyy HH:mm')}">28/10/2025 10:42</span>
+                            </span>
+                        </div>
+
+                        <div class="info-row" th:if="${payment.promotion != null}">
+                            <span class="info-label">Khuyến mãi:</span>
+                            <span class="info-value">
+                                <span class="badge bg-danger" th:text="${payment.promotion.name} + ' (' + ${payment.discountPercent} + '%)'">Giảm 22%</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="info-card">
+                        <h5 class="mb-4">
+                            <i class="fa-solid fa-calculator me-2"></i>Tổng kết
+                        </h5>
+
+                        <div class="info-row">
+                            <span class="info-label">Tổng trước giảm:</span>
+                            <span class="info-value amount" th:text="${#numbers.formatDecimal(payment.totalBefore,0,'COMMA',0,'POINT')} + ' VNĐ'">123,300 VNĐ</span>
+                        </div>
+
+                        <div class="info-row" th:if="${payment.discountPercent != null and payment.discountPercent > 0}">
+                            <span class="info-label" th:text="'Giảm giá (' + ${payment.discountPercent} + '%):'">Giảm giá (22%):</span>
+                            <span class="info-value amount text-danger" th:text="'-' + ${#numbers.formatDecimal(payment.discountAmount,0,'COMMA',0,'POINT')} + ' VNĐ'">-27,126 VNĐ</span>
+                        </div>
+
+                        <div class="info-row" style="border-top: 2px solid #dee2e6; margin-top: 16px; padding-top: 16px;">
+                            <span class="info-label">Tổng thanh toán:</span>
+                            <span class="info-value amount-total" th:text="${#numbers.formatDecimal(payment.totalAfter,0,'COMMA',0,'POINT')} + ' VNĐ'">96,174 VNĐ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Items -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="info-card">
+                        <h5 class="mb-4">
+                            <i class="fa-solid fa-list me-2"></i>Chi tiết dịch vụ & sản phẩm
+                        </h5>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                <tr>
+                                    <th>Loại</th>
+                                    <th>Tên</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(payment.items)}">
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        <i class="fa-regular fa-inbox fa-2x mb-2"></i><br>Không có chi tiết
+                                    </td>
+                                </tr>
+                                <tr th:each="item : ${payment.items}">
+                                    <td>
+                                            <span th:switch="${item.type}" class="badge">
+                                                <span th:case="SERVICE" class="bg-primary">Dịch vụ</span>
+                                                <span th:case="PRODUCT" class="bg-info">Sản phẩm</span>
+                                                <span th:case="*" class="bg-secondary" th:text="${item.type}"></span>
+                                            </span>
+                                    </td>
+                                    <td th:text="${item.name}">Lom Da</td>
+                                    <td class="text-center" th:text="${item.quantity}">1</td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(item.unitPrice,0,'COMMA',0,'POINT')} + ' VNĐ'">123,300 VNĐ</td>
+                                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(item.lineAmount,0,'COMMA',0,'POINT')} + ' VNĐ'">123,300 VNĐ</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between mt-4">
+                <a class="btn btn-outline-secondary" th:href="@{/payments}">
+                    <i class="fa-solid fa-arrow-left me-1"></i>Quay lại danh sách
+                </a>
+                <div>
+                    <a class="btn btn-salon me-2" th:href="@{'/payments/' + ${payment.id} + '/edit'}">
+                        <i class="fa-solid fa-edit me-1"></i>Chỉnh sửa
+                    </a>
+                    <button class="btn btn-outline-danger" onclick="deletePayment(${payment.id})">
+                        <i class="fa-solid fa-trash me-1"></i>Xóa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<footer th:replace="fragments/common :: footer"></footer>
+<div th:replace="fragments/common :: scripts"></div>
+
+<!-- Include notify fragments -->
+<th:block th:replace="fragments/notify :: confirmModal"></th:block>
+<th:block th:replace="fragments/notify :: toastContainer"></th:block>
+<th:block th:replace="fragments/notify :: notifyScripts"></th:block>
+
+<script>
+    function deletePayment(paymentId) {
+        if (confirm('Bạn có chắc chắn muốn xóa thanh toán này?')) {
+            // Submit delete form
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/payments/' + paymentId + '/delete';
+
+            // Add CSRF token if available
+            const csrfToken = document.querySelector('meta[name="_csrf"]');
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_csrf';
+                csrfInput.value = csrfToken.getAttribute('content');
+                form.appendChild(csrfInput);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // Auto-hide alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
+    });
+</script>
+</body>
+</html>
