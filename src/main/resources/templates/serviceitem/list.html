@@ -34,7 +34,7 @@
         .sort-link { color:#fff; text-decoration:none; display:inline-flex; align-items:center; gap:.25rem; }
         .sort-icon { opacity:.7; font-size:0.9em; }
 
-        /* Search input + nút X clear (giống trang Khách hàng) */
+        /* Search input + nút X clear */
         #serviceKeyword { padding-right:40px; }
         #serviceClearBtn { cursor:pointer; transition:opacity .2s; }
         #serviceClearBtn:hover { opacity:1 !important; }
@@ -79,9 +79,13 @@
                             </div>
                         </div>
 
+                        <!-- Giữ type hiện tại nếu có (ẩn) -->
+                        <input type="hidden" name="type" th:value="${q.type}">
                         <!-- Giữ trạng thái sắp xếp -->
                         <input type="hidden" name="sortBy" th:value="${q.sortBy}">
                         <input type="hidden" name="dir" th:value="${q.dir}">
+                        <!-- Giữ size hiện tại -->
+                        <input type="hidden" name="size" th:value="${page != null ? page.size : 10}">
 
                         <!-- Nút Tìm -->
                         <div class="col-md-2 d-grid">
@@ -90,7 +94,7 @@
                             </button>
                         </div>
 
-                        <!-- Nút Thêm dịch vụ (giữ nguyên) -->
+                        <!-- Nút Thêm dịch vụ -->
                         <div class="col-md-2 d-grid ms-auto">
                             <a class="btn btn-salon" th:href="@{/services/create}">
                                 <i class="fa-solid fa-plus me-1"></i>Thêm dịch vụ
@@ -113,9 +117,12 @@
                                 <!-- Sort theo tên -->
                                 <th>
                                     <a class="sort-link"
-                                       th:href="@{/services(page=0, keyword=${q.keyword},
-                                            sortBy='name',
-                                            dir=${(q.sortBy=='name' and q.dir=='asc') ? 'desc' : 'asc'})}">
+                                       th:href="@{/services(page=0,
+                                                            keyword=${q.keyword},
+                                                            type=${q.type},
+                                                            size=${page.size},
+                                                            sortBy='name',
+                                                            dir=${(q.sortBy=='name' and q.dir=='asc') ? 'desc' : 'asc'})}">
                                         Tên dịch vụ
                                         <i class="fa-solid"
                                            th:classappend="${q.sortBy=='name'} ?
@@ -124,14 +131,31 @@
                                     </a>
                                 </th>
 
-                                <th style="width:140px">Loại</th>
+                                <th style="width:140px">
+                                    <a class="sort-link"
+                                       th:href="@{/services(page=0,
+                                                            keyword=${q.keyword},
+                                                            type=${q.type},
+                                                            size=${page.size},
+                                                            sortBy='type',
+                                                            dir=${(q.sortBy=='type' and q.dir=='asc') ? 'desc' : 'asc'})}">
+                                        Loại
+                                        <i class="fa-solid"
+                                           th:classappend="${q.sortBy=='type'} ?
+                                                (${q.dir=='asc'} ? ' fa-arrow-up' : ' fa-arrow-down')
+                                                : ' fa-sort sort-icon'"></i>
+                                    </a>
+                                </th>
 
                                 <!-- Sort theo giá -->
                                 <th style="width:140px" class="text-end">
                                     <a class="sort-link"
-                                       th:href="@{/services(page=0, keyword=${q.keyword},
-                                            sortBy='price',
-                                            dir=${(q.sortBy=='price' and q.dir=='asc') ? 'desc' : 'asc'})}">
+                                       th:href="@{/services(page=0,
+                                                            keyword=${q.keyword},
+                                                            type=${q.type},
+                                                            size=${page.size},
+                                                            sortBy='price',
+                                                            dir=${(q.sortBy=='price' and q.dir=='asc') ? 'desc' : 'asc'})}">
                                         Giá
                                         <i class="fa-solid"
                                            th:classappend="${q.sortBy=='price'} ?
@@ -183,8 +207,16 @@
                                        data-confirm-submit-text="Đi tới sửa">
                                         <i class="fa-regular fa-pen-to-square"></i>
                                     </a>
-                                    <!-- Xoá -->
-                                    <form th:action="@{|/services/${s.id}/delete|}" method="post" class="d-inline">
+
+                                    <!-- Xoá (truyền kèm trạng thái hiện tại) -->
+                                    <form th:action="@{|/services/${s.id}/delete?keyword=${q.keyword}
+                                                                        &type=${q.type}
+                                                                        &page=${page.number}
+                                                                        &size=${page.size}
+                                                                        &sortBy=${q.sortBy}
+                                                                        &dir=${q.dir}|}"
+                                          method="post"
+                                          class="d-inline">
                                         <input type="hidden" th:if="${_csrf != null}"
                                                th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                                         <button class="btn btn-sm btn-outline-danger"
@@ -211,13 +243,13 @@
                         <ul class="pagination justify-content-center mb-0">
                             <li class="page-item" th:classappend="${page.first} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/services(page=0, keyword=${q.keyword}, sortBy=${q.sortBy}, dir=${q.dir})}">
+                                   th:href="@{/services(page=0, keyword=${q.keyword}, type=${q.type}, size=${page.size}, sortBy=${q.sortBy}, dir=${q.dir})}">
                                     <i class="fa-solid fa-angles-left"></i>
                                 </a>
                             </li>
                             <li class="page-item" th:classappend="${page.first} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/services(page=${page.number - 1}, keyword=${q.keyword}, sortBy=${q.sortBy}, dir=${q.dir})}">
+                                   th:href="@{/services(page=${page.number - 1}, keyword=${q.keyword}, type=${q.type}, size=${page.size}, sortBy=${q.sortBy}, dir=${q.dir})}">
                                     <i class="fa-solid fa-angle-left"></i>
                                 </a>
                             </li>
@@ -225,17 +257,17 @@
                                 th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
                                 th:classappend="${i == page.number} ? 'active'">
                                 <a class="page-link" th:text="${i + 1}"
-                                   th:href="@{/services(page=${i}, keyword=${q.keyword}, sortBy=${q.sortBy}, dir=${q.dir})}">1</a>
+                                   th:href="@{/services(page=${i}, keyword=${q.keyword}, type=${q.type}, size=${page.size}, sortBy=${q.sortBy}, dir=${q.dir})}">1</a>
                             </li>
                             <li class="page-item" th:classappend="${page.last} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/services(page=${page.number + 1}, keyword=${q.keyword}, sortBy=${q.sortBy}, dir=${q.dir})}">
+                                   th:href="@{/services(page=${page.number + 1}, keyword=${q.keyword}, type=${q.type}, size=${page.size}, sortBy=${q.sortBy}, dir=${q.dir})}">
                                     <i class="fa-solid fa-angle-right"></i>
                                 </a>
                             </li>
                             <li class="page-item" th:classappend="${page.last} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/services(page=${page.totalPages - 1}, keyword=${q.keyword}, sortBy=${q.sortBy}, dir=${q.dir})}">
+                                   th:href="@{/services(page=${page.totalPages - 1}, keyword=${q.keyword}, type=${q.type}, size=${page.size}, sortBy=${q.sortBy}, dir=${q.dir})}">
                                     <i class="fa-solid fa-angles-right"></i>
                                 </a>
                             </li>
@@ -255,8 +287,19 @@
 <th:block th:replace="fragments/notify :: toastContainer"></th:block>
 <th:block th:replace="fragments/notify :: notifyScripts"></th:block>
 
+<!-- Biến inline cho nút Clear -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const baseUrl       = /*[[@{/services}]]*/ '/services';
+    const currentSortBy = /*[[${q.sortBy}]]*/ 'createdAt';
+    const currentDir    = /*[[${q.dir}]]*/ 'desc';
+    const currentType   = /*[[${q.type}]]*/ '';
+    const currentSize   = /*[[${page != null ? page.size : 10}]]*/ 10;
+    /*]]>*/
+</script>
+
 <script>
-    // Nút X trong ô tìm kiếm: hiện/ẩn theo nội dung; bấm X thì reset & quay về /services
+    // Nút X trong ô tìm kiếm: hiện/ẩn theo nội dung; bấm X thì reset keyword & giữ sort/dir/type; page=0
     const serviceKeyword  = document.getElementById('serviceKeyword');
     const serviceClearBtn = document.getElementById('serviceClearBtn');
 
@@ -268,8 +311,18 @@
         if(!serviceKeyword) return;
         serviceKeyword.value = '';
         serviceToggleClear();
-        window.location.href = '/services';
+
+        const params = new URLSearchParams({
+            page: 0,
+            size: (typeof currentSize !== 'undefined' ? currentSize : 10),
+            keyword: '',
+            type: (typeof currentType !== 'undefined' ? currentType : ''),
+            sortBy: (typeof currentSortBy !== 'undefined' ? currentSortBy : 'createdAt'),
+            dir: (typeof currentDir !== 'undefined' ? currentDir : 'desc')
+        });
+        window.location.href = `${baseUrl}?${params.toString()}`;
     }
+
     serviceToggleClear();
     serviceKeyword && serviceKeyword.addEventListener('input', serviceToggleClear);
 </script>

@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.beans.PropertyEditorSupport;
-import java.util.Set; // NEW
+import java.net.URLEncoder;                         // <-- NEW
+import java.nio.charset.StandardCharsets;          // <-- NEW
+import java.util.Set;
 
 @Controller
 @RequestMapping("/services")
@@ -23,10 +25,8 @@ public class ServiceItemController {
 
     private final ServiceItemService service;
 
-    // NEW: whitelist các cột được phép sort
-    private static final Set<String> ALLOWED_SORTS = Set.of("id", "name", "type", "price", "createdAt"); // NEW
+    private static final Set<String> ALLOWED_SORTS = Set.of("id", "name", "type", "price", "createdAt");
 
-    /** Trim toàn bộ chuỗi input để tránh lỗi nhập có khoảng trắng */
     @InitBinder
     void initBinder(WebDataBinder binder) {
         binder.registerCustomEditor(String.class, new PropertyEditorSupport() {
@@ -42,21 +42,18 @@ public class ServiceItemController {
                        Model model,
                        @RequestParam(value = "ok", required = false) String ok) {
 
-        normalize(q); // đảm bảo sort, dir, page, size hợp lệ
+        normalize(q);
 
-        // NEW: tôn trọng q.sortBy + q.dir nhưng chỉ với các field hợp lệ
-        String sortBy = safeSortBy(q.getSortBy()); // NEW
-        Sort.Direction direction = "asc".equalsIgnoreCase(q.getDir())    // NEW
-                ? Sort.Direction.ASC : Sort.Direction.DESC;              // NEW
+        String sortBy = safeSortBy(q.getSortBy());
+        Sort.Direction direction = "asc".equalsIgnoreCase(q.getDir()) ? Sort.Direction.ASC : Sort.Direction.DESC;
 
-        Sort sort = Sort.by(new Sort.Order(direction, sortBy).nullsLast()) // NEW
-                .and(Sort.by(Sort.Order.desc("id")));               // NEW
+        Sort sort = Sort.by(new Sort.Order(direction, sortBy).nullsLast())
+                .and(Sort.by(Sort.Order.desc("id")));
         Pageable pageable = PageRequest.of(q.getPage(), q.getSize(), sort);
 
         model.addAttribute("page", service.search(q.getKeyword(), q.getType(), pageable));
         model.addAttribute("q", q);
 
-        // ===== Thông báo thành công (toast) =====
         if (ok != null) {
             switch (ok) {
                 case "created" -> {
@@ -74,19 +71,16 @@ public class ServiceItemController {
             }
         }
 
-        // ==================== URL sort & icon cho tiêu đề cột ====================
         String nextDir = "asc".equalsIgnoreCase(q.getDir()) ? "desc" : "asc";
+        model.addAttribute("sortByNameUrl",      buildListUrl(q, 0, q.getSize(), "name",      nextDir));
+        model.addAttribute("sortByTypeUrl",      buildListUrl(q, 0, q.getSize(), "type",      nextDir));
+        model.addAttribute("sortByPriceUrl",     buildListUrl(q, 0, q.getSize(), "price",     nextDir));
+        model.addAttribute("sortByCreatedAtUrl", buildListUrl(q, 0, q.getSize(), "createdAt", nextDir));
 
-        model.addAttribute("sortByNameUrl",       buildListUrl(q, 0, q.getSize(), "name",       nextDir));
-        model.addAttribute("sortByTypeUrl",       buildListUrl(q, 0, q.getSize(), "type",       nextDir));
-        model.addAttribute("sortByPriceUrl",      buildListUrl(q, 0, q.getSize(), "price",      nextDir));
-        model.addAttribute("sortByCreatedAtUrl",  buildListUrl(q, 0, q.getSize(), "createdAt",  nextDir));
-
-        model.addAttribute("nameIcon",       icon(q.getSortBy(), q.getDir(), "name"));
-        model.addAttribute("typeIcon",       icon(q.getSortBy(), q.getDir(), "type"));
-        model.addAttribute("priceIcon",      icon(q.getSortBy(), q.getDir(), "price"));
-        model.addAttribute("createdAtIcon",  icon(q.getSortBy(), q.getDir(), "createdAt"));
-        // ========================================================================
+        model.addAttribute("nameIcon",      icon(q.getSortBy(), q.getDir(), "name"));
+        model.addAttribute("typeIcon",      icon(q.getSortBy(), q.getDir(), "type"));
+        model.addAttribute("priceIcon",     icon(q.getSortBy(), q.getDir(), "price"));
+        model.addAttribute("createdAtIcon", icon(q.getSortBy(), q.getDir(), "createdAt"));
 
         return "serviceitem/list";
     }
@@ -94,19 +88,14 @@ public class ServiceItemController {
     // ======================= CREATE =======================
     @GetMapping("/create")
     public String createForm(Model model) {
-        prepareForm(model,
-                new ServiceItemRequest(),
-                "Thêm dịch vụ",
-                "/services/create",
-                "Lưu");
+        prepareForm(model, new ServiceItemRequest(), "Thêm dịch vụ", "/services/create", "Lưu");
         return "serviceitem/form";
     }
 
     @PostMapping("/create")
     public String createSubmit(@Valid @ModelAttribute("form") ServiceItemRequest form,
                                BindingResult br,
-                               Model model,
-                               RedirectAttributes ra) {
+                               Model model) {
         if (br.hasErrors()) {
             prepareForm(model, form, "Thêm dịch vụ", "/services/create", "Lưu");
             return "serviceitem/form";
@@ -119,11 +108,7 @@ public class ServiceItemController {
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
         var s = service.findById(id).orElseThrow();
-        prepareForm(model,
-                ServiceItemRequest.from(s),
-                "Cập nhật dịch vụ",
-                "/services/" + id + "/edit",
-                "Cập nhật");
+        prepareForm(model, ServiceItemRequest.from(s), "Cập nhật dịch vụ", "/services/" + id + "/edit", "Cập nhật");
         model.addAttribute("id", id);
         return "serviceitem/form";
     }
@@ -144,9 +129,28 @@ public class ServiceItemController {
 
     // ======================= DELETE =======================
     @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Long id) {
+    public String delete(@PathVariable Long id,
+                         // nhận lại trạng thái hiện tại để redirect chính xác
+                         @RequestParam(required = false) String keyword,
+                         @RequestParam(required = false) String type,
+                         @RequestParam(defaultValue = "0")   int page,
+                         @RequestParam(defaultValue = "10")  int size,
+                         @RequestParam(defaultValue = "createdAt") String sortBy,
+                         @RequestParam(defaultValue = "desc")     String dir) {
+
         service.delete(id);
-        return "redirect:/services?ok=deleted";
+
+        // dựng lại ServiceSearchRequest tạm để tái sử dụng buildListUrl()
+        ServiceSearchRequest back = new ServiceSearchRequest();
+        back.setKeyword(keyword);
+        back.setType(type);
+        back.setPage(page);
+        back.setSize(size);
+        back.setSortBy(safeSortBy(sortBy));
+        back.setDir(dir);
+
+        String url = buildListUrl(back, back.getPage(), back.getSize(), back.getSortBy(), back.getDir());
+        return "redirect:" + url + "&ok=deleted";
     }
 
     // ======================= HELPERS =======================
@@ -161,34 +165,28 @@ public class ServiceItemController {
         model.addAttribute("submitLabel", submitLabel);
     }
 
-    /**
-     * ✅ Sắp xếp mặc định: mới nhất ở đầu (createdAt DESC)
-     */
     private void normalize(ServiceSearchRequest q) {
         if (q.getSortBy() == null || q.getSortBy().isBlank()) q.setSortBy("createdAt");
-        if (q.getDir() == null || q.getDir().isBlank()) q.setDir("desc"); // mặc định mới nhất
+        if (q.getDir() == null || q.getDir().isBlank()) q.setDir("desc");
         if (q.getPage() < 0) q.setPage(0);
         if (q.getSize() <= 0 || q.getSize() > 100) q.setSize(10);
     }
 
-    // NEW: chỉ cho phép sort theo cột hợp lệ, tránh lỗi No property 'xxx'
     private String safeSortBy(String sortBy) {
         return (sortBy != null && ALLOWED_SORTS.contains(sortBy)) ? sortBy : "createdAt";
     }
 
-    // ======================= URL & icon =======================
     private String buildListUrl(ServiceSearchRequest q, int page, int size, String sortBy, String dir) {
-        String kw = (q.getKeyword() == null || q.getKeyword().isBlank())
-                ? "" : q.getKeyword().trim().replace(" ", "%20");
-        String type = (q.getType() == null || q.getType().isBlank()) ? "" : q.getType();
+        String kw   = q.getKeyword() == null ? "" : URLEncoder.encode(q.getKeyword(), StandardCharsets.UTF_8);
+        String type = q.getType()    == null ? "" : URLEncoder.encode(q.getType(),    StandardCharsets.UTF_8);
 
         return "/services"
                 + "?keyword=" + kw
-                + "&type=" + type
-                + "&page=" + page
-                + "&size=" + size
+                + "&type="   + type
+                + "&page="   + page
+                + "&size="   + size
                 + "&sortBy=" + sortBy
-                + "&dir=" + dir;
+                + "&dir="    + dir;
     }
 
     private String icon(String currentSortBy, String dir, String column) {
