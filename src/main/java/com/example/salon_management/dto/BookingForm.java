@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Data
 public class BookingForm {
     private Long id;
-    
+
     private String bookingCode; // Mã đặt lịch (read-only)
 
     @NotNull(message = "Vui lòng chọn khách hàng")
