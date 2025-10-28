@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 @Entity
 @Table(name = "product_usage")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class ProductUsage {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

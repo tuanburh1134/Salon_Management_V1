@@ -19,12 +19,11 @@ public class ProductUsageServiceImpl implements ProductUsageService {
     }
     @Override
     public ProductUsage create(ProductUsageForm f) {
-        ProductUsage p = ProductUsage.builder()
-                .serviceCode(f.getServiceCode().trim())
-                .productName(f.getProductName().trim())
-                .quantityUsed(f.getQuantityUsed())
-                .price(f.getPrice() == null ? BigDecimal.ZERO : f.getPrice())
-                .build();
+        ProductUsage p = new ProductUsage();
+        p.setServiceCode(f.getServiceCode().trim());
+        p.setProductName(f.getProductName().trim());
+        p.setQuantityUsed(f.getQuantityUsed());
+        p.setPrice(f.getPrice() == null ? BigDecimal.ZERO : f.getPrice());
         return repo.save(p);
     }
     @Override

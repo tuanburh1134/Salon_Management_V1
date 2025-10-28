@@ -17,7 +17,7 @@
         overflow-x: hidden;
         position: relative;
         /* Ảnh nền tĩnh từ /static/home.jpg → truy cập /home.jpg */
-        background: #9932CC;
+        background: url(/home.jpg) center / cover fixed no-repeat;
     }
 
     /* Lớp overlay làm tối nền (không bọc nội dung) */
@@ -69,22 +69,6 @@
     h2 { font-weight: 700; text-shadow: 0 0 8px rgba(255,255,255,0.4); }
     p  { font-size: 1.1rem; color: #e0e0e0; }
 
-    /* Nút khuyến mãi (tím-hồng ánh kim) */
-    .btn-outline-promo {
-        color: #d63384; /* màu hồng tím */
-        border: 2px solid #d63384;
-        background-color: transparent;
-    }
-    .btn-outline-promo:hover {
-        color: #fff;
-        background-color: #d63384;
-        border-color: #d63384;
-    }
-
-    .btn-outline-promo{
-        color:#d63384;border:2px solid #d63384;background:transparent;
-    }
-    .btn-outline-promo:hover{color:#fff;background:#d63384;border-color:#d63384;}
     /* ================= BUTTONS ================= */
     .btn {
         border-radius: 50px;
@@ -110,8 +94,8 @@
         z-index: 3;
     }
 
-    /* Ẩn menu trong navbar, chỉ giữ logo (nếu bạn muốn) */
-    .navbar-nav { display: none !important; }
+    /* KHÔNG ẩn navbar nữa để sidebar/menu hoạt động đúng */
+    /* .navbar-nav { display: none !important; }  --> loại bỏ rule này */
 
     /* Responsive */
     @media (max-width: 768px) {
@@ -131,346 +115,37 @@
         <h2 class="fw-bold mb-3">Chào mừng đến hệ thống quản lý Salon1CTW</h2>
 
         <div class="d-flex justify-content-center gap-3 flex-wrap mt-4">
-            <a class="btn btn-outline-primary shadow" th:href="@{/services}">
+            <a class="btn btn-primary shadow" href="/services" th:href="@{/services}">
                 <i class="fa-solid fa-scissors me-2"></i> Quản lý dịch vụ
             </a>
 
-            <a class="btn btn-outline-light shadow" th:href="@{/productusage}">
+            <a class="btn btn-outline-light shadow" href="/productusage" th:href="@{/productusage}">
                 <i class="fa-solid fa-boxes-stacked me-2"></i> Quản lý sản phẩm sử dụng
             </a>
 
-            <a class="btn btn-outline-warning shadow" th:href="@{/employees}">
+            <a class="btn btn-outline-warning shadow" href="/employees" th:href="@{/employees}">
                 <i class="fa-solid fa-user-tie me-2"></i> Quản lý nhân viên
             </a>
 
-            <a class="btn btn-outline-success shadow" th:href="@{/customers}">
+            <a class="btn btn-outline-success shadow" href="/customers" th:href="@{/customers}">
                 <i class="fa-solid fa-user-group me-2"></i> Quản lý khách hàng
             </a>
 
-
-            <a class="btn btn-outline-danger shadow" th:href="@{/payments}">
+            <a class="btn btn-outline-danger shadow" href="/payments" th:href="@{/payments}">
                 <i class="fa-solid fa-credit-card me-2"></i> Quản lý thanh toán
             </a>
-            <a class="btn btn-outline-promo shadow" th:href="@{/promotions}">
-                <i class="fa-solid fa-tags me-2"></i> Quản lý khuyến mãi
-            </a>
 
-
-            <a class="btn btn-outline-info shadow" th:href="@{/bookings}">
-                <i class="fa-solid fa-calendar-check me-2"></i> Quản lý đặt lịch
+            <a class="btn btn-outline-info shadow" href="/bookings" th:href="@{/bookings}">
+                <i class="fa-solid fa-calendar-check me-2"></i> Đặt lịch
             </a>
         </div>
 
     </div>
-    <section id="dashboard" class="container my-5">
-        <h3 class="fw-bold mb-3 text-white-50">
-            <i class="fa-solid fa-chart-line me-2"></i> Tổng quan hệ thống
-        </h3>
-
-        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-
-            <!-- 1. Dịch vụ -->
-            <div class="col">
-                <div class="card border-0 shadow h-100 rounded-4" style="background: rgba(255,255,255,.08); backdrop-filter: blur(10px);">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                            <span class="badge rounded-pill bg-primary-subtle text-primary">
-                                <i class="fa-solid fa-scissors"></i>
-                            </span>
-                                <h6 class="mb-0 text-white">Dịch vụ (Services)</h6>
-                            </div>
-                            <a class="btn btn-sm btn-outline-primary rounded-pill" th:href="@{/services}">
-                                Xem
-                            </a>
-                        </div>
-                        <div class="small text-white-50 mb-2">Top dịch vụ theo số lượt đặt</div>
-                        <canvas id="chartServices" height="150"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. Sản phẩm sử dụng -->
-            <div class="col">
-                <div class="card border-0 shadow h-100 rounded-4" style="background: rgba(255,255,255,.08); backdrop-filter: blur(10px);">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                            <span class="badge rounded-pill bg-light-subtle text-light">
-                                <i class="fa-solid fa-boxes-stacked"></i>
-                            </span>
-                                <h6 class="mb-0 text-white">Sản phẩm sử dụng</h6>
-                            </div>
-                            <a class="btn btn-sm btn-outline-light rounded-pill" th:href="@{/productusage}">
-                                Xem
-                            </a>
-                        </div>
-                        <div class="small text-white-50 mb-2">Tồn kho / đã dùng</div>
-                        <canvas id="chartProductUsage" height="150"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3. Nhân viên -->
-            <div class="col">
-                <div class="card border-0 shadow h-100 rounded-4" style="background: rgba(255,255,255,.08); backdrop-filter: blur(10px);">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                            <span class="badge rounded-pill bg-warning-subtle text-warning">
-                                <i class="fa-solid fa-user-tie"></i>
-                            </span>
-                                <h6 class="mb-0 text-white">Nhân viên</h6>
-                            </div>
-                            <a class="btn btn-sm btn-outline-warning rounded-pill" th:href="@{/employees}">
-                                Xem
-                            </a>
-                        </div>
-                        <div class="small text-white-50 mb-2">Hiệu suất theo tháng</div>
-                        <canvas id="chartEmployees" height="150"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. Khách hàng -->
-            <div class="col">
-                <div class="card border-0 shadow h-100 rounded-4" style="background: rgba(255,255,255,.08); backdrop-filter: blur(10px);">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                            <span class="badge rounded-pill bg-success-subtle text-success">
-                                <i class="fa-solid fa-user-group"></i>
-                            </span>
-                                <h6 class="mb-0 text-white">Khách hàng</h6>
-                            </div>
-                            <a class="btn btn-sm btn-outline-success rounded-pill" th:href="@{/customers}">
-                                Xem
-                            </a>
-                        </div>
-                        <div class="small text-white-50 mb-2">Nhóm tuổi khách hàng</div>
-                        <canvas id="chartCustomers" height="150"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 5. Thanh toán -->
-            <div class="col">
-                <div class="card border-0 shadow h-100 rounded-4" style="background: rgba(255,255,255,.08); backdrop-filter: blur(10px);">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                            <span class="badge rounded-pill bg-danger-subtle text-danger">
-                                <i class="fa-solid fa-credit-card"></i>
-                            </span>
-                                <h6 class="mb-0 text-white">Thanh toán</h6>
-                            </div>
-                            <a class="btn btn-sm btn-outline-danger rounded-pill" th:href="@{/payments}">
-                                Xem
-                            </a>
-                        </div>
-                        <div class="small text-white-50 mb-2">Doanh thu 7 ngày gần nhất</div>
-                        <canvas id="chartPayments" height="150"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 6. Khuyến mãi -->
-            <div class="col">
-                <div class="card border-0 shadow h-100 rounded-4" style="background: rgba(255,255,255,.08); backdrop-filter: blur(10px);">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                            <span class="badge rounded-pill" style="background:#fce4f1;color:#d63384;">
-                                <i class="fa-solid fa-tags"></i>
-                            </span>
-                                <h6 class="mb-0 text-white">Khuyến mãi</h6>
-                            </div>
-                            <a class="btn btn-sm rounded-pill btn-outline-promo" th:href="@{/promotions}">
-                                Xem
-                            </a>
-                        </div>
-                        <div class="small text-white-50 mb-2">Tỷ lệ sử dụng mã</div>
-                        <canvas id="chartPromotions" height="150"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 7. Đặt lịch -->
-            <div class="col">
-                <div class="card border-0 shadow h-100 rounded-4" style="background: rgba(255,255,255,.08); backdrop-filter: blur(10px);">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                            <span class="badge rounded-pill bg-info-subtle text-info">
-                                <i class="fa-solid fa-calendar-check"></i>
-                            </span>
-                                <h6 class="mb-0 text-white">Đặt lịch</h6>
-                            </div>
-                            <a class="btn btn-sm btn-outline-info rounded-pill" th:href="@{/bookings}">
-                                Xem
-                            </a>
-                        </div>
-                        <div class="small text-white-50 mb-2">Booking theo khung giờ</div>
-                        <canvas id="chartBookings" height="150"></canvas>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </section>
 </main>
 
 <!-- Footer & scripts (fragment Thymeleaf) -->
 <footer th:replace="fragments/common :: footer"></footer>
 <div th:replace="fragments/common :: scripts"></div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 
-<script>
-    /** —— Utility: gradient fill for line/area —— */
-    function buildGradient(ctx, color){
-        const g = ctx.createLinearGradient(0,0,0,180);
-        g.addColorStop(0, color.replace('1)', '.35)'));
-        g.addColorStop(1, color.replace('1)', '0)'));
-        return g;
-    }
-
-    /** —— Palette —— */
-    const C = {
-        primary: 'rgba(13,110,253,1)',   // Services
-        light:   'rgba(248,249,250,1)',  // Product usage
-        warn:    'rgba(255,193,7,1)',    // Employees
-        success: 'rgba(25,135,84,1)',    // Customers
-        danger:  'rgba(220,53,69,1)',    // Payments
-        promo:   'rgba(214,51,132,1)',   // Promotions
-        info:    'rgba(13,202,240,1)'    // Bookings
-    };
-
-    /** —— 1. Services (bar) —— */
-    new Chart(document.getElementById('chartServices'), {
-        type: 'bar',
-        data: {
-            labels: ['Cắt', 'Nhuộm', 'Uốn', 'Gội', 'Duỗi'],
-            datasets: [{
-                label: 'Lượt đặt',
-                data: [120, 90, 70, 140, 65],
-                backgroundColor: C.primary,
-                borderRadius: 8
-            }]
-        },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-    });
-
-    /** —— 2. Product Usage (doughnut) —— */
-    new Chart(document.getElementById('chartProductUsage'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Đã dùng', 'Còn lại'],
-            datasets: [{
-                data: [320, 680],
-                backgroundColor: ['rgba(108,117,125,1)', C.light],
-                borderWidth: 0
-            }]
-        },
-        options: { cutout: '65%', plugins: { legend: { position: 'bottom', labels:{ color:'#ddd' } } } }
-    });
-
-    /** —— 3. Employees (line, area) —— */
-    (function(){
-        const ctx = document.getElementById('chartEmployees').getContext('2d');
-        const color = C.warn;
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['T1','T2','T3','T4','T5','T6'],
-                datasets: [{
-                    label: 'Điểm hiệu suất',
-                    data: [78,82,80,85,88,90],
-                    fill: true,
-                    borderColor: color,
-                    backgroundColor: buildGradient(ctx, color),
-                    tension: .35,
-                    pointRadius: 3
-                }]
-            },
-            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-        });
-    })();
-
-    /** —— 4. Customers (radar) —— */
-    new Chart(document.getElementById('chartCustomers'), {
-        type: 'radar',
-        data: {
-            labels: ['<18','18-24','25-34','35-44','45-54','>55'],
-            datasets: [{
-                label: 'Số KH',
-                data: [20, 120, 180, 140, 60, 25],
-                borderColor: C.success,
-                backgroundColor: 'rgba(25,135,84,.25)',
-                pointBackgroundColor: C.success
-            }]
-        },
-        options: { plugins:{ legend:{ display:false } }, scales:{ r:{ angleLines:{ color:'rgba(255,255,255,.1)'}, grid:{ color:'rgba(255,255,255,.1)'} } } }
-    });
-
-    /** —— 5. Payments (line) —— */
-    (function(){
-        const ctx = document.getElementById('chartPayments').getContext('2d');
-        const color = C.danger;
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['T2','T3','T4','T5','T6','T7','CN'],
-                datasets: [{
-                    label: 'Doanh thu (triệu)',
-                    data: [12, 9, 10, 14, 18, 22, 16],
-                    borderColor: color,
-                    backgroundColor: buildGradient(ctx, color),
-                    fill: true,
-                    tension: .35,
-                    pointRadius: 3
-                }]
-            },
-            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-        });
-    })();
-
-    /** —— 6. Promotions (polarArea) —— */
-    new Chart(document.getElementById('chartPromotions'), {
-        type: 'polarArea',
-        data: {
-            labels: ['SUMMER10','NEW20','VIP15','COMBO5'],
-            datasets: [{
-                data: [45, 60, 25, 20],
-                backgroundColor: [
-                    'rgba(214,51,132,.9)',
-                    'rgba(214,51,132,.7)',
-                    'rgba(214,51,132,.5)',
-                    'rgba(214,51,132,.35)'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: { plugins: { legend: { position: 'bottom', labels: { color:'#ddd' } } } }
-    });
-
-    /** —— 7. Bookings (pie) —— */
-    new Chart(document.getElementById('chartBookings'), {
-        type: 'pie',
-        data: {
-            labels: ['Sáng','Trưa','Chiều','Tối'],
-            datasets: [{
-                data: [25, 15, 35, 25],
-                backgroundColor: [
-                    'rgba(13,202,240,1)',
-                    'rgba(13,202,240,.75)',
-                    'rgba(13,202,240,.5)',
-                    'rgba(13,202,240,.3)'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: { plugins: { legend: { position: 'bottom', labels:{ color:'#ddd' } } } }
-    });
-</script>
 </body>
 </html>

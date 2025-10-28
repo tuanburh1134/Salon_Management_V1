@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/common :: head">
+    <title th:text="${pageTitle}">Tạo thanh toán</title>
+    <style>
+        /* === Sticky Footer === */
+        html, body { height: 100%; margin: 0; }
+        body { display: flex; flex-direction: column; min-height: 100vh; background: #f8f9fa; }
+        main { flex: 1; }
+        footer {
+            margin-top: auto; background: #fff; border-top: 1px solid #dee2e6;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05); text-align: center; padding: 12px 0;
+        }
+
+        /* === Style trang === */
+        .page-header {
+            background: linear-gradient(90deg, #6f42c1, #8b5cf6);
+            color: #fff; padding: 32px 0; margin-bottom: 24px;
+            box-shadow: 0 3px 8px rgba(0,0,0,.1);
+        }
+        .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.05); overflow: hidden; }
+        .btn-salon {
+            background: linear-gradient(135deg, #6f42c1, #8b5cf6);
+            color: #fff; border: none; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(111,66,193,.25); transition: all .2s ease;
+        }
+        .btn-salon:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(111,66,193,.35); }
+        .form-label { font-weight: 600; color: #212529; }
+        .form-control:focus, .form-select:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 .2rem rgba(139, 92, 246, 0.2);
+        }
+
+        /* === Form Container === */
+        .form-container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 32px 36px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* === Alert styles === */
+        .alert {
+            border-radius: 8px;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* === Info box === */
+        .info-box {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border: 1px solid #e1bee7;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        /* === Responsive === */
+        @media (max-width: 768px) {
+            .form-container { padding: 20px; }
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+<header th:replace="fragments/common :: header"></header>
+
+<div class="d-flex flex-grow-1">
+    <nav th:replace="fragments/common :: navigation"></nav>
+
+    <main class="flex-fill">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="container">
+                <h1 class="mb-0">
+                    <i class="fa-solid fa-credit-card me-2"></i>
+                    <span th:text="${pageTitle}">Tạo thanh toán</span>
+                </h1>
+                <p class="mb-0 mt-2">Nhập thông tin thanh toán vào biểu mẫu dưới đây</p>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Flash messages -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-exclamation me-2"></i><span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Form Container -->
+            <div class="form-container">
+                <form th:action="@{/payments}" th:object="${form}" method="post" novalidate>
+                    <input type="hidden" th:if="${_csrf != null}"
+                           th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <!-- Error messages -->
+                    <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
+                        <ul class="mb-0">
+                            <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+                        </ul>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Chọn Đặt lịch -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fa-solid fa-calendar-check me-1"></i>Đặt lịch <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" th:field="*{bookingId}" required>
+                                <option disabled selected value="">-- Chọn đặt lịch --</option>
+                                <option th:each="b : ${bookings}" th:value="${b.id}"
+                                        th:text="${(b.bookingCode != null ? b.bookingCode : (b.code != null ? b.code : 'BK-' + b.id)) + ' - ' + (b.customer != null ? b.customer.name : '-') }">
+                                </option>
+                            </select>
+                            <div class="form-text">
+                                <a th:href="@{/bookings}" target="_blank" class="text-decoration-none">
+                                    <i class="fa-solid fa-external-link-alt me-1"></i>Xem/Quản lý đặt lịch
+                                </a>
+                            </div>
+                            <div class="text-danger small" th:if="${#fields.hasErrors('bookingId')}"
+                                 th:errors="*{bookingId}"></div>
+                        </div>
+
+                        <!-- Phương thức thanh toán -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fa-solid fa-credit-card me-1"></i>Phương thức thanh toán <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" th:field="*{method}" required>
+                                <option disabled selected value="">-- Chọn phương thức --</option>
+                                <option th:each="m : ${methods}" th:value="${m.name()}" th:text="${m.getVietnameseName()}"></option>
+                            </select>
+                            <div class="text-danger small" th:if="${#fields.hasErrors('method')}"
+                                 th:errors="*{method}"></div>
+                        </div>
+
+                        <!-- Khuyến mãi -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fa-solid fa-gift me-1"></i>Khuyến mãi
+                            </label>
+                            <select class="form-select" th:field="*{promotionId}">
+                                <option th:value="${null}">-- Không áp dụng --</option>
+                                <option th:each="p : ${promotions}" th:value="${p.id}"
+                                        th:text="${p.code + ' - ' + p.name + ' (' + p.percent + '%)'}"></option>
+                            </select>
+                            <div class="form-text">
+                                <a th:href="@{/promotions}" target="_blank" class="text-decoration-none">
+                                    <i class="fa-solid fa-external-link-alt me-1"></i>Xem/Thêm khuyến mãi
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Ngày giờ thanh toán -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fa-solid fa-clock me-1"></i>Ngày giờ thanh toán
+                            </label>
+                            <input class="form-control" type="datetime-local" th:field="*{paidAt}">
+                            <div class="form-text">Để trống sẽ tự động lấy thời gian hiện tại</div>
+                        </div>
+                    </div>
+
+                    <!-- Nút hành động -->
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button class="btn btn-salon px-4" type="submit">
+                            <i class="fa-solid fa-floppy-disk me-1"></i>Lưu thanh toán
+                        </button>
+                        <a class="btn btn-outline-secondary px-4" th:href="@{/payments}">
+                            <i class="fa-solid fa-arrow-left me-1"></i>Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<footer th:replace="fragments/common :: footer"></footer>
+<div th:replace="fragments/common :: scripts"></div>
+
+<!-- Include notify fragments -->
+<th:block th:replace="fragments/notify :: confirmModal"></th:block>
+<th:block th:replace="fragments/notify :: toastContainer"></th:block>
+<th:block th:replace="fragments/notify :: notifyScripts"></th:block>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const bookingSelect = document.querySelector('select[name="bookingId"]');
+        const methodSelect = document.querySelector('select[name="method"]');
+        const paidAtInput = document.querySelector('input[name="paidAt"]');
+
+        // Set current datetime as default for paidAt
+        if (paidAtInput && !paidAtInput.value) {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            paidAtInput.value = now.toISOString().slice(0, 16);
+        }
+
+        // Real-time validation
+        function validateForm() {
+            let isValid = true;
+
+            // Clear previous error states
+            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            document.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+
+            // Validate booking selection
+            if (!bookingSelect.value) {
+                bookingSelect.classList.add('is-invalid');
+                showFieldError(bookingSelect, 'Vui lòng chọn một đặt lịch');
+                isValid = false;
+            }
+
+            // Validate payment method
+            if (!methodSelect.value) {
+                methodSelect.classList.add('is-invalid');
+                showFieldError(methodSelect, 'Vui lòng chọn phương thức thanh toán');
+                isValid = false;
+            }
+
+            // Validate paidAt (if provided)
+            if (paidAtInput.value) {
+                const paidAt = new Date(paidAtInput.value);
+                const now = new Date();
+                const oneYearAgo = new Date();
+                oneYearAgo.setFullYear(now.getFullYear() - 1);
+
+                if (paidAt > now) {
+                    paidAtInput.classList.add('is-invalid');
+                    showFieldError(paidAtInput, 'Ngày thanh toán không được ở tương lai');
+                    isValid = false;
+                } else if (paidAt < oneYearAgo) {
+                    paidAtInput.classList.add('is-invalid');
+                    showFieldError(paidAtInput, 'Ngày thanh toán không được quá 1 năm trước');
+                    isValid = false;
+                }
+            }
+
+            return isValid;
+        }
+
+        function showFieldError(field, message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback';
+            errorDiv.textContent = message;
+            field.parentNode.appendChild(errorDiv);
+        }
+
+        // Add event listeners
+        bookingSelect.addEventListener('change', function() {
+            if (this.value) {
+                this.classList.remove('is-invalid');
+                const errorDiv = this.parentNode.querySelector('.invalid-feedback');
+                if (errorDiv) errorDiv.remove();
+            }
+        });
+
+        methodSelect.addEventListener('change', function() {
+            if (this.value) {
+                this.classList.remove('is-invalid');
+                const errorDiv = this.parentNode.querySelector('.invalid-feedback');
+                if (errorDiv) errorDiv.remove();
+            }
+        });
+
+        paidAtInput.addEventListener('change', function() {
+            if (this.value) {
+                const paidAt = new Date(this.value);
+                const now = new Date();
+                const oneYearAgo = new Date();
+                oneYearAgo.setFullYear(now.getFullYear() - 1);
+
+                if (paidAt <= now && paidAt >= oneYearAgo) {
+                    this.classList.remove('is-invalid');
+                    const errorDiv = this.parentNode.querySelector('.invalid-feedback');
+                    if (errorDiv) errorDiv.remove();
+                }
+            }
+        });
+
+        // Form submission validation
+        form.addEventListener('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+
+                // Show error message
+                const errorAlert = document.createElement('div');
+                errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+                errorAlert.innerHTML = `
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+                    Vui lòng kiểm tra lại thông tin đã nhập
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                const container = document.querySelector('.container');
+                container.insertBefore(errorAlert, container.firstChild);
+
+                // Scroll to first error
+                const firstError = document.querySelector('.is-invalid');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstError.focus();
+                }
+            }
+        });
+
+        // Auto-hide alerts
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
+    });
+</script>
+
+</body>
+</html>
