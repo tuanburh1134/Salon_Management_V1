@@ -2,68 +2,44 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <!-- Nhúng head chung -->
     <th:block th:replace="fragments/common :: head"></th:block>
-
     <title>Quản lý đặt lịch</title>
 
     <style>
-        /* === Sticky Footer === */
-        html, body { height: 100%; margin: 0; }
-        body { display: flex; flex-direction: column; min-height: 100vh; background: #f8f9fa; }
-        main { flex: 1; }
-        footer {
-            margin-top: auto; background: #fff; border-top: 1px solid #dee2e6;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.05); text-align: center; padding: 12px 0;
-            position: relative; bottom: 0; width: 100%;
-        }
+        html, body { height:100%; margin:0; }
+        body { display:flex; flex-direction:column; min-height:100vh; background:#f8f9fa; }
+        main { flex:1; }
 
-        /* === Style trang === */
-        .page-header{
-            border-radius: 12px 12px 12px 12px;
-            background: linear-gradient(90deg, #6f42c1, #8b5cf6);
+        .page-header {
+            background: linear-gradient(90deg,#6f42c1,#8b5cf6);
             color:#fff; padding:32px 0; margin-bottom:24px;
-            box-shadow: 0 3px 8px rgba(0,0,0,.1);
+            box-shadow:0 3px 8px rgba(0,0,0,.1);
         }
-        .card{ border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); overflow:hidden; }
-        .btn-salon{
-            background: linear-gradient(135deg,#6f42c1,#8b5cf6); color:#fff; border:none; border-radius:8px;
-            box-shadow: 0 4px 12px rgba(111,66,193,.25); transition: all .2s ease;
-        }
-        .btn-salon:hover{ transform: translateY(-1px); box-shadow:0 6px 18px rgba(111,66,193,.35); }
-        .table thead{ background:#343a40; color:#fff; }
-        .status-badge { font-size: 0.8em; padding: 4px 8px; }
-
-        .sortable { cursor: pointer; user-select: none; transition: background-color 0.2s ease; }
-        .sortable:hover { background-color: rgba(255, 255, 255, 0.1); }
-        .sortable i { opacity: 0.7; transition: opacity 0.2s ease; }
-        .sortable:hover i { opacity: 1; }
-
-        /* === Booking search input with inner clear button === */
-        #bkKeyword { padding-right: 40px; } /* chừa chỗ cho nút X */
-        #bkClearBtn { cursor: pointer; transition: opacity .2s; }
-        #bkClearBtn:hover { opacity: 1 !important; }
-
-        /* Toast tím gradient giống style chung */
-        .toast-purple {
+        .card { border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); overflow:hidden; }
+        .btn-salon {
             background: linear-gradient(135deg,#6f42c1,#8b5cf6);
-            color: #fff;
+            color:#fff; border:none; border-radius:8px;
+            box-shadow:0 4px 12px rgba(111,66,193,.25);
+            transition:all .2s ease;
         }
-        .toast-purple .btn-close {
-            filter: invert(1); /* nút đóng màu trắng */
-        }
+        .btn-salon:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(111,66,193,.35); }
+        .table thead { background:#343a40; color:#fff; }
+
+        .status-badge { font-size:0.8em; padding:4px 8px; }
+
+        /* Toast góc phải */
+        .toast { min-width:260px; }
     </style>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
-<!-- Header chung -->
 <header th:replace="fragments/common :: header"></header>
 
-<!-- NAV + MAIN -->
 <div class="d-flex flex-grow-1">
     <nav th:replace="fragments/common :: navigation"></nav>
 
     <main class="flex-fill">
+        <!-- Header -->
         <div class="page-header">
             <div class="container">
                 <h1 class="mb-0"><i class="fa-solid fa-calendar-check me-2"></i>Quản lý đặt lịch</h1>
@@ -72,82 +48,43 @@
         </div>
 
         <div class="container">
-
-            <!-- ===== TOAST THÀNH CÔNG / LỖI (THAY CHO ALERT) ===== -->
-            <!-- Vị trí toast cố định góc trên bên phải -->
-            <div class="position-fixed top-0 end-0 p-3" style="z-index: 1080">
-                <!-- Success toast -->
-                <div id="bookingToastSuccess"
-                     class="toast align-items-center border-0 toast-purple"
-                     role="alert" aria-live="assertive" aria-atomic="true"
-                     th:if="${successMsg}"
-                     th:data-message="${successMsg}">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fa-solid fa-circle-check me-2"></i>
-                            <span th:text="${successMsg}">Thao tác thành công!</span>
-                        </div>
-                        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            <!-- Toast thông báo -->
+            <div th:if="${msg}" id="toastMessage"
+                 class="toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-4 show shadow-lg"
+                 role="alert" aria-live="assertive" aria-atomic="true" style="z-index:1055;">
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center">
+                        <i class="fa-solid fa-circle-check me-2"></i>
+                        <span th:text="${msg}">Thao tác thành công!</span>
                     </div>
-                </div>
-
-                <!-- Error toast (tuỳ chọn nếu bạn set errorMsg) -->
-                <div id="bookingToastError"
-                     class="toast align-items-center text-white bg-danger border-0"
-                     role="alert" aria-live="assertive" aria-atomic="true"
-                     th:if="${errorMsg}"
-                     th:data-message="${errorMsg}">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                            <span th:text="${errorMsg}">Đã có lỗi xảy ra!</span>
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
             </div>
             <!-- ===== HẾT: TOAST ===== -->
 
-            <!-- Bộ lọc (CHỈ SỬA PHẦN TỪ KHÓA + BỎ CỘT CLEAR RIÊNG) -->
-            <div class="card mb-3">
+            <!-- Bộ lọc -->
+            <div class="card mb-3 border-0 shadow-sm">
                 <div class="card-body">
                     <form id="searchForm" class="row g-3 align-items-end" th:action="@{/bookings}" method="get">
                         <!-- Ô tìm kiếm có nút X bên trong -->
                         <div class="col-md-4">
-                            <label class="form-label">
-                                <i class="fa-solid fa-magnifying-glass me-1"></i>Từ khóa
-                            </label>
-                            <div class="position-relative">
-                                <input id="bkKeyword"
-                                       class="form-control"
-                                       name="keyword"
-                                       placeholder="Tìm theo tên khách hàng, dịch vụ, nhân viên..."
-                                       th:value="${q.keyword}">
-                                <button type="button"
-                                        id="bkClearBtn"
-                                        class="btn-close position-absolute top-50 end-0 translate-middle-y me-2"
-                                        style="display:none; z-index:10; opacity:.5;"
-                                        onclick="bkClearSearch()"></button>
-                            </div>
+                            <label class="form-label fw-semibold"><i class="fa-solid fa-magnifying-glass me-1"></i>Từ khóa</label>
+                            <input class="form-control" name="keyword" placeholder="Tìm theo tên khách hàng, dịch vụ, nhân viên..." th:value="${q.keyword}">
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">
-                                <i class="fa-solid fa-circle-check me-1"></i>Trạng thái
-                            </label>
+                            <label class="form-label fw-semibold"><i class="fa-solid fa-circle-check me-1"></i>Trạng thái</label>
                             <select class="form-select" name="status" th:value="${q.status}">
                                 <option value="">Tất cả trạng thái</option>
-                                <option value="Chờ xử lý">Chờ xử lý</option>
-                                <option value="Xác nhận">Xác nhận</option>
-                                <option value="Hoàn thành">Hoàn thành</option>
-                                <option value="Hủy">Hủy</option>
+                                <option>Chờ xử lý</option>
+                                <option>Xác nhận</option>
+                                <option>Hoàn thành</option>
+                                <option>Hủy</option>
                             </select>
                         </div>
 
                         <div class="col-md-2 d-grid">
-                            <button class="btn btn-salon" type="submit">
-                                <i class="fa-solid fa-search me-1"></i>Tìm
-                            </button>
+                            <button class="btn btn-salon" type="submit"><i class="fa-solid fa-search me-1"></i>Tìm</button>
                         </div>
 
                         <div class="col-md-2 d-grid ms-auto">
@@ -155,40 +92,25 @@
                                 <i class="fa-solid fa-plus me-1"></i><span>Thêm đặt lịch</span>
                             </a>
                         </div>
-
-                        <!-- Hidden inputs for sort/pagination -->
-                        <input type="hidden" name="sortBy" th:value="${q.sortBy}">
-                        <input type="hidden" name="dir" th:value="${q.dir}">
-                        <input type="hidden" name="page" th:value="${q.page}">
                     </form>
                 </div>
             </div>
 
-            <!-- Bảng danh sách -->
-            <div class="card">
+            <!-- Danh sách -->
+            <div class="card border-0 shadow-sm">
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0 align-middle">
                             <thead class="table-dark">
                             <tr>
-                                <th style="width:80px">STT</th>
-                                <th style="width:120px">Mã đặt lịch</th>
-                                <th style="width:150px">Khách hàng</th>
-                                <th style="width:150px">Dịch vụ</th>
-                                <th style="width:150px" class="sortable" onclick="sortBy('bookingDateTime')">
-                                    Ngày giờ
-                                    <i class="fa-solid fa-sort ms-1"
-                                       th:classappend="${q.sortBy == 'bookingDateTime' and q.dir == 'asc'} ? 'fa-sort-up' :
-                                                       (${q.sortBy == 'bookingDateTime' and q.dir == 'desc'} ? 'fa-sort-down' : 'fa-sort')"></i>
-                                </th>
-                                <th style="width:150px">Nhân viên</th>
-                                <th style="width:120px" class="text-center sortable" onclick="sortBy('status')">
-                                    Trạng thái
-                                    <i class="fa-solid fa-sort ms-1"
-                                       th:classappend="${q.sortBy == 'status' and q.dir == 'asc'} ? 'fa-sort-up' :
-                                                       (${q.sortBy == 'status' and q.dir == 'desc'} ? 'fa-sort-down' : 'fa-sort')"></i>
-                                </th>
-                                <th style="width:170px" class="text-end">Thao tác</th>
+                                <th>STT</th>
+                                <th>Mã đặt lịch</th>
+                                <th>Khách hàng</th>
+                                <th>Dịch vụ</th>
+                                <th>Ngày giờ</th>
+                                <th>Nhân viên</th>
+                                <th class="text-center">Trạng thái</th>
+                                <th class="text-end">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -200,44 +122,31 @@
 
                             <tr th:each="b, iter : ${page.content}">
                                 <td><span class="badge bg-secondary" th:text="${page.number * page.size + iter.index + 1}">1</span></td>
-                                <td><span class="badge bg-primary" th:text="${b.bookingCode}">DL0001</span></td>
-                                <td><strong th:text="${b.customer.name}"></strong></td>
+                                <td><span class="badge bg-primary" th:text="${b.bookingCode}">DL001</span></td>
+                                <td th:text="${b.customer.name}">Tên KH</td>
                                 <td>
-                                    <span th:text="${b.service.name}"></span>
-                                    <br><small class="text-muted" th:text="${b.service.type}"></small>
+                                    <span th:text="${b.service.name}"></span><br>
+                                    <small class="text-muted" th:text="${b.service.type}"></small>
                                 </td>
-                                <td>
-                                    <i class="fa-regular fa-calendar me-1"></i>
-                                    <span th:text="${#temporals.format(b.bookingDateTime, 'dd/MM/yyyy HH:mm')}"></span>
-                                </td>
-                                <td><span th:text="${b.employee.name}"></span></td>
+                                <td><span th:text="${#temporals.format(b.bookingDateTime, 'dd/MM/yyyy HH:mm')}"></span></td>
+                                <td th:text="${b.employee.name}"></td>
                                 <td class="text-center">
-                                  <span th:classappend="${
+                                    <span th:classappend="${
                                         b.status == 'Chờ xử lý' ? 'badge bg-warning' :
                                         (b.status == 'Xác nhận' ? 'badge bg-info' :
                                         (b.status == 'Hoàn thành' ? 'badge bg-success' : 'badge bg-danger'))
-                                    }"
-                                        th:text="${b.status}"
-                                        class="status-badge"></span>
+                                    }" th:text="${b.status}" class="status-badge"></span>
                                 </td>
                                 <td class="text-end">
-                                    <a class="btn btn-sm btn-outline-warning"
-                                       th:href="@{|/bookings/${b.id}/edit|}"
-                                       data-confirm="true"
-                                       data-confirm-title="Xác nhận chỉnh sửa"
-                                       data-confirm-body="Bạn có chắc muốn chỉnh sửa đặt lịch này không?"
-                                       data-confirm-submit-text="Chỉnh sửa">
+                                    <a class="btn btn-sm btn-outline-warning me-1"
+                                       th:href="@{|/bookings/${b.id}/edit|}" title="Chỉnh sửa">
                                         <i class="fa-regular fa-pen-to-square"></i>
                                     </a>
-                                    <form th:action="@{|/bookings/${b.id}/delete|}" method="post" class="d-inline">
-                                        <input type="hidden" th:if="${_csrf != null}"
-                                               th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                        <button class="btn btn-sm btn-outline-danger"
-                                                type="submit"
-                                                data-confirm="true"
-                                                data-confirm-title="Xác nhận xoá đặt lịch"
-                                                data-confirm-body="Bạn có chắc chắn muốn xoá đặt lịch này? Hành động này không thể hoàn tác."
-                                                data-confirm-submit-text="Xoá">
+                                    <form th:action="@{|/bookings/${b.id}/delete|}" method="post" class="d-inline delete-form">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-btn"
+                                                th:attr="data-id=${b.id},data-name=${b.customer.name},data-code=${b.bookingCode}"
+                                                title="Xóa đặt lịch">
                                             <i class="fa-regular fa-trash-can"></i>
                                         </button>
                                     </form>
@@ -249,34 +158,22 @@
                 </div>
             </div>
 
-            <!-- Phân trang -->
-            <div th:if="${page.totalPages > 1}" class="card mt-3">
+            <!-- Phân trang (giữ nguyên logic cũ) -->
+            <div th:if="${page.totalPages > 1}" class="card mt-3 border-0 shadow-sm">
                 <div class="card-body">
                     <nav aria-label="pagination">
                         <ul class="pagination justify-content-center mb-0">
-                            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-                                <a class="page-link" th:href="@{/bookings(page=0, keyword=${q.keyword}, status=${q.status}, sortBy=${q.sortBy}, dir=${q.dir})}">
+                            <li class="page-item" th:classappend="${page.first}? 'disabled'">
+                                <a class="page-link" th:href="@{/bookings(page=0, keyword=${q.keyword}, status=${q.status})}">
                                     <i class="fa-solid fa-angles-left"></i>
                                 </a>
                             </li>
-                            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-                                <a class="page-link" th:href="@{/bookings(page=${page.number - 1}, keyword=${q.keyword}, status=${q.status}, sortBy=${q.sortBy}, dir=${q.dir})}">
-                                    <i class="fa-solid fa-angle-left"></i>
-                                </a>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages-1)}"
+                                th:classappend="${i==page.number}? 'active'">
+                                <a class="page-link" th:text="${i+1}" th:href="@{/bookings(page=${i}, keyword=${q.keyword}, status=${q.status})}"></a>
                             </li>
-                            <li class="page-item"
-                                th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
-                                th:classappend="${i == page.number} ? 'active'">
-                                <a class="page-link" th:text="${i + 1}"
-                                   th:href="@{/bookings(page=${i}, keyword=${q.keyword}, status=${q.status}, sortBy=${q.sortBy}, dir=${q.dir})}">1</a>
-                            </li>
-                            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-                                <a class="page-link" th:href="@{/bookings(page=${page.number + 1}, keyword=${q.keyword}, status=${q.status}, sortBy=${q.sortBy}, dir=${q.dir})}">
-                                    <i class="fa-solid fa-angle-right"></i>
-                                </a>
-                            </li>
-                            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-                                <a class="page-link" th:href="@{/bookings(page=${page.totalPages - 1}, keyword=${q.keyword}, status=${q.status}, sortBy=${q.sortBy}, dir=${q.dir})}">
+                            <li class="page-item" th:classappend="${page.last}? 'disabled'">
+                                <a class="page-link" th:href="@{/bookings(page=${page.totalPages-1}, keyword=${q.keyword}, status=${q.status})}">
                                     <i class="fa-solid fa-angles-right"></i>
                                 </a>
                             </li>
@@ -291,64 +188,61 @@
 <footer th:replace="fragments/common :: footer"></footer>
 <div th:replace="fragments/common :: scripts"></div>
 
-<!-- Notify (để dùng modal confirm như bạn đã có) -->
-<th:block th:replace="fragments/notify :: confirmModal"></th:block>
-<th:block th:replace="fragments/notify :: toastContainer"></th:block>
-<th:block th:replace="fragments/notify :: notifyScripts"></th:block>
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning bg-opacity-25">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i> Xác nhận xoá đặt lịch
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteMessage" class="mb-0 text-secondary">
+                    Bạn có chắc chắn muốn xoá đặt lịch này? Hành động này <b>không thể hoàn tác</b>.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xoá</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-    /**
-     * sortBy(field) - Sort booking list by field
-     * Updates the search form with new sort parameters and submits
-     */
-    function sortBy(field) {
-        var form = document.getElementById('searchForm');
-        var sortByInput = form.querySelector('input[name="sortBy"]');
-        var dirInput = form.querySelector('input[name="dir"]');
-        var pageInput = form.querySelector('input[name="page"]');
-
-        var currentField = sortByInput.value || 'bookingDateTime';
-        var currentDir = dirInput.value || 'desc';
-        var nextDir = (currentField === field && currentDir === 'asc') ? 'desc' : 'asc';
-
-        sortByInput.value = field;
-        dirInput.value = nextDir;
-        pageInput.value = 0; // Reset to first page when sorting
-
-        form.submit();
-    }
-
-    // ====== Booking search clear button ======
-    const bkKeyword  = document.getElementById('bkKeyword');
-    const bkClearBtn = document.getElementById('bkClearBtn');
-
-    function bkToggleClear() {
-        if (!bkKeyword || !bkClearBtn) return;
-        bkClearBtn.style.display = bkKeyword.value.trim().length > 0 ? 'block' : 'none';
-    }
-
-    function bkClearSearch() {
-        if (!bkKeyword) return;
-        bkKeyword.value = '';
-        bkToggleClear();
-        // Điều hướng về danh sách sạch tham số
-        window.location.href = '/bookings';
-    }
-
-    bkToggleClear();
-    bkKeyword && bkKeyword.addEventListener('input', bkToggleClear);
-
-    // ====== AUTO SHOW TOAST nếu có flash attribute ======
-    document.addEventListener('DOMContentLoaded', function () {
-        var suc = document.getElementById('bookingToastSuccess');
-        var err = document.getElementById('bookingToastError');
-
-        if (suc && suc.getAttribute('data-message')) {
-            new bootstrap.Toast(suc, { delay: 3000 }).show();
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tự ẩn toast sau 3 giây
+        const toastEl = document.getElementById('toastMessage');
+        if (toastEl) {
+            setTimeout(() => {
+                toastEl.classList.remove('show');
+                toastEl.style.transition = 'opacity .4s';
+                toastEl.style.opacity = '0';
+                setTimeout(() => toastEl.remove(), 450);
+            }, 3000);
         }
-        if (err && err.getAttribute('data-message')) {
-            new bootstrap.Toast(err, { delay: 4000 }).show();
-        }
+
+        // Modal xác nhận xóa
+        let deleteForm;
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        const deleteMessage = document.getElementById('deleteMessage');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const name = this.getAttribute('data-name');
+                const code = this.getAttribute('data-code');
+                deleteMessage.innerHTML = `Bạn có chắc chắn muốn xoá đặt lịch <b>${code}</b> của khách hàng <b>${name}</b>?<br>Hành động này <b>không thể hoàn tác</b>.`;
+                deleteForm = this.closest('form');
+                deleteModal.show();
+            });
+        });
+
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (deleteForm) deleteForm.submit();
+        });
     });
 </script>
 </body>

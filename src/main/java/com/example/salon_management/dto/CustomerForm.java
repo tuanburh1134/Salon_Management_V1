@@ -1,5 +1,6 @@
 package com.example.salon_management.dto;
 
+import com.example.salon_management.entity.Customer.MemberType;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -23,7 +24,7 @@ public class CustomerForm {
 
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không hợp lệ")
-    @Size(max = 120, message = "Email tối đa 120 ký tự")
+    @Size(max = 120)
     private String email;
 
     @NotBlank(message = "Loại thành viên không được để trống")

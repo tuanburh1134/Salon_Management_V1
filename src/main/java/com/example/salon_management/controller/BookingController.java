@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.beans.PropertyEditorSupport;
+import java.util.Comparator;
 import java.util.List;
 
 @Controller
@@ -134,7 +135,15 @@ public class BookingController {
                              String actionUrl,
                              String submitLabel) {
         List<Customer> customers = customerRepository.findAll();
-        List<Employee> employees = employeeRepository.findAll();
+
+        // Cập nhật Sắp xếp: specialty -> position -> shift -> name (để ổn định)
+        Sort employeeSort = Sort.by("specialty").ascending()
+                .and(Sort.by("shift").ascending())
+                .and(Sort.by("position").ascending())
+                .and(Sort.by("name").ascending());
+
+        List<Employee> employees = employeeRepository.findAll(employeeSort);
+
         List<ServiceItem> services = serviceItemRepository.findAll();
 
         model.addAttribute("form", form);
@@ -142,7 +151,7 @@ public class BookingController {
         model.addAttribute("actionUrl", actionUrl);
         model.addAttribute("submitLabel", submitLabel);
         model.addAttribute("customers", customers);
-        model.addAttribute("employees", employees);
+        model.addAttribute("employees", employees); // Danh sách nhân viên đã sắp xếp
         model.addAttribute("services", services);
     }
 

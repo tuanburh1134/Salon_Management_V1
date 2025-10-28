@@ -22,6 +22,9 @@ public class Customer {
     private Long id;
 
     // ======= THÔNG TIN KHÁCH HÀNG =======
+    @Column(length = 10)
+    private String stt; // Số thứ tự hiển thị trong danh sách
+
     @NotBlank(message = "Tên không được để trống")
     @Size(max = 120, message = "Tên tối đa 120 ký tự")
     @Column(nullable = false, length = 120)
@@ -56,6 +59,9 @@ public class Customer {
     @Column(nullable = false)
     private Integer point = 0;
 
+    @Column(length = 255)
+    private String photo; // 🖼️ Đường dẫn ảnh đại diện (VD: "uploads/customers/kh001.jpg")
+    private String image;
     // ======= TRẠNG THÁI =======
     @Column(nullable = false)
     private Boolean deleted = false;
@@ -67,6 +73,7 @@ public class Customer {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // ======= SỰ KIỆN HỆ THỐNG =======
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
