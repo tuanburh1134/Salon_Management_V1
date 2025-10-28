@@ -16,10 +16,11 @@
         }
 
         .page-header {
-            border-radius: 12px 12px 12px 12px;
-            background: linear-gradient(90deg, #ffd700, #ffcc00);
-            color: #fff; padding: 32px 0; margin-bottom: 24px;
-            box-shadow: 0 3px 8px rgba(0,0,0,.1);
+            border-radius:12px;
+            background: linear-gradient(90deg,#6f42c1,#8b5cf6);
+            color:#fff;
+            padding:32px 0;
+            margin-bottom:24px;
         }
 
         .form-container {
@@ -68,8 +69,11 @@
     <main class="flex-fill">
         <div class="page-header">
             <div class="container">
-
-                <p class="mb-0 mt-2">Quản lý thông tin nhân viên tại salon</p>
+                <h1 class="mb-0">
+                    <i class="fa-solid fa-user-group me-2"></i>
+                    <span th:text="${pageTitle}">Thêm nhân viên</span>
+                </h1>
+                <p class="mb-0 mt-2">Nhập thông tin nhân viên vào biểu mẫu dưới đây</p>
             </div>
         </div>
 
