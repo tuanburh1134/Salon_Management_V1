@@ -25,17 +25,17 @@
         }
         .btn-salon:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(111,66,193,.35); }
         .table thead { background:#343a40; color:#fff; }
+        .sort-link { color:#fff; text-decoration:none; display:inline-flex; align-items:center; gap:.25rem; }
+        .sort-icon { opacity:.7; font-size:0.9em; }
         .service-image {
             width:72px; height:72px; object-fit:cover; border-radius:12px;
             background:#f8f9fa; border:1px solid rgba(0,0,0,.06);
         }
-        .sort-link { color:#fff; text-decoration:none; display:inline-flex; align-items:center; gap:.25rem; }
-        .sort-icon { opacity:.7; font-size:0.9em; }
 
-        /* ===== Search input with clear (giống trang Nhân viên) ===== */
-        #svcKeyword { padding-right:40px; }
-        #svcClearBtn { cursor:pointer; transition:opacity .2s; }
-        #svcClearBtn:hover { opacity:1 !important; }
+        /* Search with clear */
+        #puKeyword { padding-right:40px; }
+        #puClearBtn { cursor:pointer; transition:opacity .2s; }
+        #puClearBtn:hover { opacity:1 !important; }
     </style>
 </head>
 
@@ -65,7 +65,6 @@
                             <label class="form-label">
                                 <i class="fa-solid fa-magnifying-glass me-1"></i>Từ khóa
                             </label>
-
                             <!-- Ô tìm kiếm có nút X bên trong -->
                             <div class="position-relative">
                                 <input id="puKeyword"
@@ -81,9 +80,10 @@
                             </div>
                         </div>
 
-                        <!-- Giữ trạng thái sắp xếp -->
+                        <!-- Giữ trạng thái sắp xếp + size -->
                         <input type="hidden" name="sortBy" th:value="${sortBy}">
-                        <input type="hidden" name="dir" th:value="${dir}">
+                        <input type="hidden" name="dir"    th:value="${dir}">
+                        <input type="hidden" name="size"   th:value="${data != null ? data.size : 10}">
 
                         <div class="col-md-2 d-grid">
                             <button class="btn btn-salon" type="submit">
@@ -91,13 +91,11 @@
                             </button>
                         </div>
 
-
                         <div class="col-md-2 d-grid ms-auto">
-                            <a class="btn btn-salon" th:href="@{/services/create}">
+                            <a class="btn btn-salon" th:href="@{/productusage/create}">
                                 <i class="fa-solid fa-plus me-1"></i>Thêm mới
                             </a>
                         </div>
-
                     </form>
                 </div>
             </div>
@@ -115,6 +113,7 @@
                                 <th style="width:140px">
                                     <a class="sort-link"
                                        th:href="@{/productusage(page=0, q=${q},
+                                            size=${data.size},
                                             sortBy='serviceCode',
                                             dir=${(sortBy=='serviceCode' and dir=='asc') ? 'desc' : 'asc'})}">
                                         Mã DV
@@ -129,6 +128,7 @@
                                 <th>
                                     <a class="sort-link"
                                        th:href="@{/productusage(page=0, q=${q},
+                                            size=${data.size},
                                             sortBy='productName',
                                             dir=${(sortBy=='productName' and dir=='asc') ? 'desc' : 'asc'})}">
                                         Tên sản phẩm
@@ -143,6 +143,7 @@
                                 <th class="text-end" style="width:140px">
                                     <a class="sort-link"
                                        th:href="@{/productusage(page=0, q=${q},
+                                            size=${data.size},
                                             sortBy='quantityUsed',
                                             dir=${(sortBy=='quantityUsed' and dir=='asc') ? 'desc' : 'asc'})}">
                                         Số lượng
@@ -157,6 +158,7 @@
                                 <th class="text-end" style="width:160px">
                                     <a class="sort-link"
                                        th:href="@{/productusage(page=0, q=${q},
+                                            size=${data.size},
                                             sortBy='price',
                                             dir=${(sortBy=='price' and dir=='asc') ? 'desc' : 'asc'})}">
                                         Giá
@@ -198,8 +200,14 @@
                                        data-confirm-submit-text="Đi tới sửa">
                                         <i class="fa-regular fa-pen-to-square"></i>
                                     </a>
-                                    <!-- Xoá -->
-                                    <form th:action="@{|/productusage/${p.id}/delete|}" method="post" class="d-inline">
+                                    <!-- Xoá: GIỮ TRẠNG THÁI q/sort/dir/page/size -->
+                                    <form th:action="@{|/productusage/${p.id}/delete?q=${q}
+                                                                        &page=${data.number}
+                                                                        &size=${data.size}
+                                                                        &sortBy=${sortBy}
+                                                                        &dir=${dir}|}"
+                                          method="post"
+                                          class="d-inline">
                                         <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                                         <button class="btn btn-sm btn-outline-danger"
                                                 type="submit"
@@ -227,7 +235,7 @@
                             <!-- Về trang đầu -->
                             <li class="page-item" th:classappend="${data.first} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/productusage(page=0, q=${q}, sortBy=${sortBy}, dir=${dir})}">
+                                   th:href="@{/productusage(page=0, q=${q}, size=${data.size}, sortBy=${sortBy}, dir=${dir})}">
                                     <i class="fa-solid fa-angles-left"></i>
                                 </a>
                             </li>
@@ -235,7 +243,7 @@
                             <!-- Lùi 1 trang -->
                             <li class="page-item" th:classappend="${data.first} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/productusage(page=${data.number - 1}, q=${q}, sortBy=${sortBy}, dir=${dir})}">
+                                   th:href="@{/productusage(page=${data.number - 1}, q=${q}, size=${data.size}, sortBy=${sortBy}, dir=${dir})}">
                                     <i class="fa-solid fa-angle-left"></i>
                                 </a>
                             </li>
@@ -245,13 +253,13 @@
                                 th:each="i : ${#numbers.sequence(0, data.totalPages - 1)}"
                                 th:classappend="${i == data.number} ? 'active'">
                                 <a class="page-link" th:text="${i + 1}"
-                                   th:href="@{/productusage(page=${i}, q=${q}, sortBy=${sortBy}, dir=${dir})}">1</a>
+                                   th:href="@{/productusage(page=${i}, q=${q}, size=${data.size}, sortBy=${sortBy}, dir=${dir})}">1</a>
                             </li>
 
                             <!-- Tiến 1 trang -->
                             <li class="page-item" th:classappend="${data.last} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/productusage(page=${data.number + 1}, q=${q}, sortBy=${sortBy}, dir=${dir})}">
+                                   th:href="@{/productusage(page=${data.number + 1}, q=${q}, size=${data.size}, sortBy=${sortBy}, dir=${dir})}">
                                     <i class="fa-solid fa-angle-right"></i>
                                 </a>
                             </li>
@@ -259,7 +267,7 @@
                             <!-- Tới trang cuối -->
                             <li class="page-item" th:classappend="${data.last} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/productusage(page=${data.totalPages - 1}, q=${q}, sortBy=${sortBy}, dir=${dir})}">
+                                   th:href="@{/productusage(page=${data.totalPages - 1}, q=${q}, size=${data.size}, sortBy=${sortBy}, dir=${dir})}">
                                     <i class="fa-solid fa-angles-right"></i>
                                 </a>
                             </li>
@@ -273,7 +281,6 @@
 </div>
 
 <footer th:replace="fragments/common :: footer"></footer>
-
 <div th:replace="fragments/common :: scripts"></div>
 
 <!-- Notify -->
@@ -281,8 +288,18 @@
 <th:block th:replace="fragments/notify :: toastContainer"></th:block>
 <th:block th:replace="fragments/notify :: notifyScripts"></th:block>
 
+<!-- Inline vars cho clear -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const puBaseUrl = /*[[@{/productusage}]]*/ '/productusage';
+    const puSortBy  = /*[[${sortBy}]]*/ 'createdAt';
+    const puDir     = /*[[${dir}]]*/ 'desc';
+    const puSize    = /*[[${data != null ? data.size : 10}]]*/ 10;
+    /*]]>*/
+</script>
+
 <script>
-    // Chỉ phần tìm kiếm: hiện/ẩn nút X và xoá nhanh
+    // Toggle & Clear tìm kiếm (giữ sort/dir/size, reset page=0)
     const puKeyword  = document.getElementById('puKeyword');
     const puClearBtn = document.getElementById('puClearBtn');
 
@@ -295,8 +312,15 @@
         if (!puKeyword) return;
         puKeyword.value = '';
         puToggleClear();
-        // về danh sách sạch tham số tìm kiếm
-        window.location.href = '/productusage';
+
+        const params = new URLSearchParams({
+            page: 0,
+            size: (typeof puSize  !== 'undefined' ? puSize  : 10),
+            q:    '',
+            sortBy: (typeof puSortBy !== 'undefined' ? puSortBy : 'createdAt'),
+            dir:    (typeof puDir    !== 'undefined' ? puDir    : 'desc')
+        });
+        window.location.href = `${puBaseUrl}?${params.toString()}`;
     }
 
     puToggleClear();
