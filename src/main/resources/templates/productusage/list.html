@@ -11,33 +11,31 @@
             margin-top:auto; background:#fff; border-top:1px solid #dee2e6;
             box-shadow:0 -2px 8px rgba(0,0,0,.05); text-align:center; padding:12px 0;
         }
-
-        body { background:#f8f9fa; color:#212529; }
-
-        /* Tiêu đề: giống serviceitem */
         .page-header {
             border-radius:12px;
-            background:linear-gradient(90deg,#0d6efd,#4f9cff);
-            color:#fff;
-            padding:32px 0;
-            margin-bottom:24px;
+            background:linear-gradient(90deg,#6f42c1,#8b5cf6);
+            color:#fff; padding:32px 0; margin-bottom:24px;
             box-shadow:0 3px 8px rgba(0,0,0,.1);
         }
-        .page-header h1 { font-weight:700; margin:0; }
-
-        .card{ border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); overflow:hidden; }
-        .table thead{ background:#343a40; color:#fff; text-transform:uppercase; letter-spacing:.05rem; }
-        .table-hover tbody tr:hover{ background:#f2f7ff; }
-        .sort-link{ color:#fff; text-decoration:none; display:inline-flex; align-items:center; gap:.25rem; }
-        .sort-icon{ opacity:.7; font-size:.9em; }
-        .btn-icon{
-            width:36px; height:36px; padding:0; display:inline-flex; align-items:center; justify-content:center;
-            border-radius:8px; border:1px solid transparent; transition:all .2s ease;
+        .card { border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); overflow:hidden; }
+        .btn-salon {
+            background:linear-gradient(135deg,#6f42c1,#8b5cf6);
+            color:#fff; border:none; border-radius:8px;
+            box-shadow:0 4px 12px rgba(111,66,193,.25); transition:all .2s ease;
         }
-        .pagination .page-link{ border-radius:10px; border:1px solid #dee2e6; color:#212529; transition:all .2s; }
-        .pagination .page-link:hover{ background:#f2f4f7; border-color:#cbd5e1; }
-        .page-item.active .page-link{ background:linear-gradient(90deg,#0d6efd,#4f9cff);  color:#fff; font-weight:700; }
-        .page-item.disabled .page-link{ color:#98a2b3; background:#f2f4f7; }
+        .btn-salon:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(111,66,193,.35); }
+        .table thead { background:#343a40; color:#fff; }
+        .service-image {
+            width:72px; height:72px; object-fit:cover; border-radius:12px;
+            background:#f8f9fa; border:1px solid rgba(0,0,0,.06);
+        }
+        .sort-link { color:#fff; text-decoration:none; display:inline-flex; align-items:center; gap:.25rem; }
+        .sort-icon { opacity:.7; font-size:0.9em; }
+
+        /* ===== Search input with clear (giống trang Nhân viên) ===== */
+        #svcKeyword { padding-right:40px; }
+        #svcClearBtn { cursor:pointer; transition:opacity .2s; }
+        #svcClearBtn:hover { opacity:1 !important; }
     </style>
 </head>
 
@@ -67,7 +65,20 @@
                             <label class="form-label">
                                 <i class="fa-solid fa-magnifying-glass me-1"></i>Từ khóa
                             </label>
-                            <input class="form-control" name="q" placeholder="Tên sản phẩm hoặc mã dịch vụ" th:value="${q}">
+
+                            <!-- Ô tìm kiếm có nút X bên trong -->
+                            <div class="position-relative">
+                                <input id="puKeyword"
+                                       class="form-control"
+                                       name="q"
+                                       placeholder="Tên sản phẩm hoặc mã dịch vụ"
+                                       th:value="${q}">
+                                <button type="button"
+                                        id="puClearBtn"
+                                        class="btn-close position-absolute top-50 end-0 translate-middle-y me-2"
+                                        style="display:none; z-index:10; opacity:.5;"
+                                        onclick="puClearSearch()"></button>
+                            </div>
                         </div>
 
                         <!-- Giữ trạng thái sắp xếp -->
@@ -75,18 +86,14 @@
                         <input type="hidden" name="dir" th:value="${dir}">
 
                         <div class="col-md-2 d-grid">
-                            <button class="btn btn-primary" type="submit">
+                            <button class="btn btn-salon" type="submit">
                                 <i class="fa-solid fa-search me-1"></i>Tìm
                             </button>
                         </div>
-                        <div class="col-md-2 d-grid">
-                            <a class="btn btn-outline-secondary" th:href="@{/productusage}">
-                                <i class="fa-solid fa-xmark me-1"></i>Hủy tìm kiếm
-                            </a>
-                        </div>
+
 
                         <div class="col-md-2 d-grid ms-auto">
-                            <a class="btn btn-primary" th:href="@{/productusage/create}">
+                            <a class="btn btn-salon" th:href="@{/services/create}">
                                 <i class="fa-solid fa-plus me-1"></i>Thêm mới
                             </a>
                         </div>
@@ -261,7 +268,6 @@
                 </div>
             </div>
 
-
         </div>
     </main>
 </div>
@@ -274,5 +280,27 @@
 <th:block th:replace="fragments/notify :: confirmModal"></th:block>
 <th:block th:replace="fragments/notify :: toastContainer"></th:block>
 <th:block th:replace="fragments/notify :: notifyScripts"></th:block>
+
+<script>
+    // Chỉ phần tìm kiếm: hiện/ẩn nút X và xoá nhanh
+    const puKeyword  = document.getElementById('puKeyword');
+    const puClearBtn = document.getElementById('puClearBtn');
+
+    function puToggleClear() {
+        if (!puKeyword || !puClearBtn) return;
+        puClearBtn.style.display = puKeyword.value.trim().length > 0 ? 'block' : 'none';
+    }
+
+    function puClearSearch() {
+        if (!puKeyword) return;
+        puKeyword.value = '';
+        puToggleClear();
+        // về danh sách sạch tham số tìm kiếm
+        window.location.href = '/productusage';
+    }
+
+    puToggleClear();
+    puKeyword && puKeyword.addEventListener('input', puToggleClear);
+</script>
 </body>
 </html>

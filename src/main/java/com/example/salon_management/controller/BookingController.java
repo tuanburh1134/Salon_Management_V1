@@ -44,7 +44,8 @@ public class BookingController {
 
     // ========================= LIST =========================
     @GetMapping({"", "/", "/list"})
-    public String list(@ModelAttribute("q") BookingSearchRequest q, Model model) {
+    public String list(@ModelAttribute("q") BookingSearchRequest q, Model model,
+                       @ModelAttribute("successMsg") String successMsg) { // ✅ ADD
         normalize(q); // đảm bảo sort/page/size hợp lệ
 
         Sort sort = "desc".equalsIgnoreCase(q.getDir())
@@ -55,6 +56,12 @@ public class BookingController {
 
         model.addAttribute("page", bookingService.search(q.getKeyword(), q.getStatus(), pageable));
         model.addAttribute("q", q);
+
+        // ✅ Thêm hiển thị thông báo từ RedirectAttributes nếu có
+        if (successMsg != null && !successMsg.isEmpty()) {
+            model.addAttribute("successMsg", successMsg);
+        }
+
         return "booking/list";
     }
 
@@ -79,7 +86,7 @@ public class BookingController {
             return "booking/form";
         }
         bookingService.create(form);
-        ra.addFlashAttribute("msg", "Đã thêm đặt lịch thành công!");
+        ra.addFlashAttribute("successMsg", "Đã thêm đặt lịch thành công!"); // ✅ giữ nguyên
         return "redirect:/bookings";
     }
 
@@ -108,7 +115,7 @@ public class BookingController {
             return "booking/form";
         }
         bookingService.update(id, form);
-        ra.addFlashAttribute("msg", "Đã cập nhật đặt lịch");
+        ra.addFlashAttribute("successMsg", "Đã cập nhật đặt lịch thành công!"); // ✅ giữ nguyên
         return "redirect:/bookings";
     }
 
@@ -116,7 +123,7 @@ public class BookingController {
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes ra) {
         bookingService.delete(id);
-        ra.addFlashAttribute("msg", "Đã xóa đặt lịch");
+        ra.addFlashAttribute("successMsg", "Đã xóa đặt lịch thành công!"); // ✅ giữ nguyên
         return "redirect:/bookings";
     }
 
@@ -146,4 +153,3 @@ public class BookingController {
         if (q.getSize() <= 0 || q.getSize() > 100) q.setSize(10);
     }
 }
-

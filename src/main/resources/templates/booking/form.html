@@ -1,10 +1,35 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/common :: head">
+<head>
+    <!-- nhúng head chung -->
+    <th:block th:replace="fragments/common :: head"></th:block>
     <title th:text="${title}">Đặt lịch</title>
 
+    <!-- CHỈ SỬA PHẦN TIÊU ĐỀ: class riêng section-hero để tránh bị CSS khác đè -->
     <style>
-        /* === Sticky Footer === */
+        /* ===== Tiêu đề ngay dưới header, nền tím gradient — đồng bộ với trang Dịch vụ ===== */
+        main .section-hero{
+            background: linear-gradient(135deg, #6f42c1 0%, #3b0a91 100%) !important;
+            color:#fff !important;
+            padding:32px 0 !important;
+            margin:0 0 24px 0 !important;
+            border-radius:12px;
+            box-shadow:0 4px 16px rgba(0,0,0,.15);
+        }
+        main .section-hero h1{
+            margin:0;
+            font-weight:700;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-size:1.9rem;
+        }
+        main .section-hero p{
+            margin:8px 0 0;
+            opacity:.9;
+        }
+
+        /* ===== Giữ nguyên các style cũ bạn đang dùng cho form ===== */
         html, body { height: 100%; margin: 0; }
         body { display: flex; flex-direction: column; min-height: 100vh; background: #f8f9fa; }
         main { flex: 1; }
@@ -13,13 +38,6 @@
             box-shadow: 0 -2px 8px rgba(0,0,0,0.05); text-align: center; padding: 12px 0;
             position: relative; bottom: 0; width: 100%;
         }
-
-        /* === Style trang === */
-        .page-header{
-            background: linear-gradient(90deg, #6f42c1, #8b5cf6);
-            color:#fff; padding:32px 0; margin-bottom:24px;
-            box-shadow: 0 3px 8px rgba(0,0,0,.1);
-        }
         .card{ border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); overflow:hidden; }
         .btn-salon{
             background: linear-gradient(135deg,#6f42c1,#8b5cf6); color:#fff; border:none; border-radius:8px;
@@ -27,54 +45,42 @@
         }
         .btn-salon:hover{ transform: translateY(-1px); box-shadow:0 6px 18px rgba(111,66,193,.35); }
 
-        /* === Làm đẹp form === */
         .form-container {
             background: #fff;
             border-radius: 12px;
             padding: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
-
-        .form-label {
-            font-weight: 600;
-            color: #343a40;
-        }
-
+        .form-label { font-weight: 600; color: #343a40; }
         .form-control:focus {
             border-color: #86b7fe;
             box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
         }
-
-        .btn-primary,
-        .btn-outline-secondary {
-            border-radius: 8px;
-        }
-
-        h1 {
-            font-weight: 700;
-            color: #fff;
-        }
+        .btn-primary, .btn-outline-secondary { border-radius: 8px; }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
-<!-- Header chung -->
+<!-- HEADER CHUNG -->
 <header th:replace="fragments/common :: header"></header>
 
-<!-- Đặt NAV và MAIN cùng một hàng để không bị đẩy xuống -->
+<!-- NAV + MAIN -->
 <div class="d-flex flex-grow-1">
     <nav th:replace="fragments/common :: navigation"></nav>
 
     <main class="flex-fill">
-        <div class="page-header">
+        <!-- ====== TIÊU ĐỀ MỚI (đồng bộ với trang Dịch vụ) ====== -->
+        <div class="section-hero">
             <div class="container">
-                <h1 class="mb-0"><i class="fa-solid fa-calendar-plus me-2"></i><span th:text="${title}">Thêm đặt lịch</span></h1>
-                <p class="mb-0 mt-2">Quản lý lịch hẹn khách hàng</p>
+                <h1 class="mb-0">
+                    <i class="fa-solid fa-calendar-plus"></i>
+                    <span th:text="${title}">Thêm đặt lịch</span>
+                </h1>
+                <p>Quản lý lịch hẹn khách hàng</p>
             </div>
         </div>
 
         <div class="container">
-
-            <!-- Flash messages -->
+            <!-- Flash messages (giữ nguyên) -->
             <div th:if="${msg}" class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="fa-solid fa-circle-check me-2"></i><span th:text="${msg}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -86,9 +92,7 @@
 
                         <!-- Mã đặt lịch (chỉ hiển thị khi edit) -->
                         <div th:if="${form.bookingCode != null and !#strings.isEmpty(form.bookingCode)}" class="mb-3">
-                            <label class="form-label">
-                                Mã đặt lịch
-                            </label>
+                            <label class="form-label">Mã đặt lịch</label>
                             <input class="form-control" th:value="${form.bookingCode}" readonly disabled>
                         </div>
 
@@ -164,9 +168,7 @@
                         </div>
 
                         <div class="mb-3 mt-3">
-                            <label class="form-label">
-                                Ghi chú
-                            </label>
+                            <label class="form-label">Ghi chú</label>
                             <textarea class="form-control" th:field="*{notes}" rows="3"
                                       placeholder="Ghi chú thêm về đặt lịch..."></textarea>
                         </div>
