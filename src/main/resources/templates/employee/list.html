@@ -6,43 +6,38 @@
     <title>Danh sách nhân viên</title>
 
     <style>
-        /* === Sticky Footer === */
-        html, body { height: 100%; margin: 0; }
-        body { display: flex; flex-direction: column; min-height: 100vh; background: #f8f9fa; }
-        main { flex: 1; }
+        html, body { height:100%; margin:0; }
+        body { display:flex; flex-direction:column; min-height:100vh; background:#f8f9fa; }
+        main { flex:1; }
         footer {
-            margin-top: auto; background: #fff; border-top: 1px solid #dee2e6;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.05); text-align: center; padding: 12px 0;
-            position: relative; bottom: 0; width: 100%;
+            margin-top:auto; background:#fff; border-top:1px solid #dee2e6;
+            box-shadow:0 -2px 8px rgba(0,0,0,.05); text-align:center; padding:12px 0;
         }
-
-        /* === Style trang === */
-        .page-header{
-            background: linear-gradient(90deg, #ffd700, #ffcc00);
+        .page-header {
+            border-radius:12px;
+            background:linear-gradient(90deg,#6f42c1,#8b5cf6);
             color:#fff; padding:32px 0; margin-bottom:24px;
-            box-shadow: 0 3px 8px rgba(0,0,0,.1);
+            box-shadow:0 3px 8px rgba(0,0,0,.1);
         }
-        .card{ border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); overflow:hidden; }
-        .btn-salon{
-            background: linear-gradient(135deg,#ffd700,#ffcc00); color:#fff; border:none; border-radius:8px;
-            box-shadow: 0 4px 12px rgba(255,215,0,.25); transition: all .2s ease;
+        .card { border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); overflow:hidden; }
+        .btn-salon {
+            background:linear-gradient(135deg,#6f42c1,#8b5cf6);
+            color:#fff; border:none; border-radius:8px;
+            box-shadow:0 4px 12px rgba(111,66,193,.25); transition:all .2s ease;
         }
-        .btn-salon:hover{ transform: translateY(-1px); box-shadow:0 6px 18px rgba(255,215,0,.35); }
-        .table thead{ background:#343a40; color:#fff; }
-        .sort-btn { cursor: pointer; color: #fff; }
-        .sort-btn:hover { text-decoration: underline; }
-        
-        /* === Search input with clear button === */
-        #keywordInput { 
-            padding-right: 40px; /* Tránh text bị che bởi nút clear */
+        .btn-salon:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(111,66,193,.35); }
+        .table thead { background:#343a40; color:#fff; }
+        .service-image {
+            width:72px; height:72px; object-fit:cover; border-radius:12px;
+            background:#f8f9fa; border:1px solid rgba(0,0,0,.06);
         }
-        #clearSearchBtn { 
-            cursor: pointer; 
-            transition: opacity 0.2s;
-        }
-        #clearSearchBtn:hover { 
-            opacity: 1 !important; 
-        }
+        .sort-link { color:#fff; text-decoration:none; display:inline-flex; align-items:center; gap:.25rem; }
+        .sort-icon { opacity:.7; font-size:0.9em; }
+
+        /* ===== Search input with clear (giống trang Nhân viên) ===== */
+        #svcKeyword { padding-right:40px; }
+        #svcClearBtn { cursor:pointer; transition:opacity .2s; }
+        #svcClearBtn:hover { opacity:1 !important; }
     </style>
 </head>
 
@@ -116,10 +111,11 @@
                             </button>
                         </div>
                         <div class="col-md-2 d-grid ms-auto">
-                            <a class="btn btn-primary d-flex align-items-center justify-content-center" th:href="@{/employees/create}">
+                            <a class="btn btn-salon d-flex align-items-center justify-content-center" th:href="@{/employees/create}">
                                 <i class="fa-solid fa-plus me-1"></i><span>Thêm nhân viên</span>
                             </a>
                         </div>
+
                     </form>
                 </div>
             </div>

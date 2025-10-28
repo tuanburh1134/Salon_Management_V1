@@ -25,7 +25,7 @@
             color:#fff; border:none; border-radius:8px;
             box-shadow:0 4px 12px rgba(111,66,193,.25); transition:all .2s ease;
         }
-        .btn-salon:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(111,66,193,.35); }
+        .btn-salon:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(111,66,193,.35); color:#fff; }
         .table thead { background:#343a40; color:#fff; }
         .service-image {
             width:72px; height:72px; object-fit:cover; border-radius:12px;
@@ -33,6 +33,11 @@
         }
         .sort-link { color:#fff; text-decoration:none; display:inline-flex; align-items:center; gap:.25rem; }
         .sort-icon { opacity:.7; font-size:0.9em; }
+
+        /* Search input + nút X clear (giống trang Khách hàng) */
+        #serviceKeyword { padding-right:40px; }
+        #serviceClearBtn { cursor:pointer; transition:opacity .2s; }
+        #serviceClearBtn:hover { opacity:1 !important; }
     </style>
 </head>
 
@@ -56,25 +61,36 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <form class="row g-3 align-items-end" th:action="@{/services}" method="get">
+                        <!-- Ô tìm kiếm + nút X bên trong -->
                         <div class="col-md-6">
-                            <label class="form-label"><i class="fa-solid fa-magnifying-glass me-1"></i>Từ khóa</label>
-                            <input class="form-control" name="keyword" placeholder="Nhập tên dịch vụ..." th:value="${q.keyword}">
+                            <label class="form-label">
+                                <i class="fa-solid fa-magnifying-glass me-1"></i>Từ khóa
+                            </label>
+                            <div class="position-relative">
+                                <input id="serviceKeyword"
+                                       class="form-control"
+                                       name="keyword"
+                                       placeholder="Nhập tên dịch vụ..."
+                                       th:value="${q.keyword}">
+                                <button type="button" id="serviceClearBtn"
+                                        class="btn-close position-absolute top-50 end-0 translate-middle-y me-2"
+                                        style="display:none; z-index:10; opacity:.5;"
+                                        onclick="serviceClearSearch()"></button>
+                            </div>
                         </div>
 
                         <!-- Giữ trạng thái sắp xếp -->
                         <input type="hidden" name="sortBy" th:value="${q.sortBy}">
                         <input type="hidden" name="dir" th:value="${q.dir}">
 
+                        <!-- Nút Tìm -->
                         <div class="col-md-2 d-grid">
                             <button class="btn btn-salon" type="submit">
                                 <i class="fa-solid fa-search me-1"></i>Tìm
                             </button>
                         </div>
-                        <div class="col-md-2 d-grid">
-                            <a class="btn btn-outline-secondary" th:href="@{/services}">
-                                <i class="fa-solid fa-xmark me-1"></i>Hủy tìm kiếm
-                            </a>
-                        </div>
+
+                        <!-- Nút Thêm dịch vụ (giữ nguyên) -->
                         <div class="col-md-2 d-grid ms-auto">
                             <a class="btn btn-salon" th:href="@{/services/create}">
                                 <i class="fa-solid fa-plus me-1"></i>Thêm dịch vụ
@@ -238,5 +254,24 @@
 <th:block th:replace="fragments/notify :: confirmModal"></th:block>
 <th:block th:replace="fragments/notify :: toastContainer"></th:block>
 <th:block th:replace="fragments/notify :: notifyScripts"></th:block>
+
+<script>
+    // Nút X trong ô tìm kiếm: hiện/ẩn theo nội dung; bấm X thì reset & quay về /services
+    const serviceKeyword  = document.getElementById('serviceKeyword');
+    const serviceClearBtn = document.getElementById('serviceClearBtn');
+
+    function serviceToggleClear(){
+        if(!serviceKeyword || !serviceClearBtn) return;
+        serviceClearBtn.style.display = serviceKeyword.value.trim().length > 0 ? 'block' : 'none';
+    }
+    function serviceClearSearch(){
+        if(!serviceKeyword) return;
+        serviceKeyword.value = '';
+        serviceToggleClear();
+        window.location.href = '/services';
+    }
+    serviceToggleClear();
+    serviceKeyword && serviceKeyword.addEventListener('input', serviceToggleClear);
+</script>
 </body>
 </html>
