@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/common :: head">
+    <title th:text="${pageTitle} ?: 'Quản lý thanh toán'">Quản lý thanh toán</title>
+    <style>
+        /* === Sticky Footer === */
+        html, body { height: 100%; margin: 0; }
+        body { display: flex; flex-direction: column; min-height: 100vh; background: #f8f9fa; }
+        main { flex: 1; }
+        footer {
+            margin-top: auto; background: #fff; border-top: 1px solid #dee2e6;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05); text-align: center; padding: 12px 0;
+        }
+
+        /* === Style trang === */
+        .page-header {
+            background: linear-gradient(90deg, #6f42c1, #8b5cf6);
+            color: #fff;
+            padding: 32px 0;
+            margin-bottom: 24px;
+            box-shadow: 0 3px 8px rgba(0,0,0,.1);
+        }
+        .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.05); overflow: hidden; }
+        .btn-salon {
+            background: linear-gradient(135deg, #6f42c1, #8b5cf6);
+            color: #fff; border: none; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(111,66,193,.25); transition: all .2s ease;
+        }
+        .btn-salon:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(111,66,193,.35); }
+        .table thead { background: #343a40; color: #fff; }
+        .search-small { font-size: 0.9rem; padding: 0.45rem 1rem; border-radius: 999px; height: auto; }
+        .stt-badge { min-width: 32px; display: inline-flex; justify-content: center; }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+<header th:replace="fragments/common :: header"></header>
+
+<div class="d-flex flex-grow-1">
+    <nav th:replace="fragments/common :: navigation"></nav>
+
+    <main class="flex-fill">
+        <div class="page-header">
+            <div class="container">
+                <h1 class="mb-0"><i class="fa-solid fa-credit-card me-2"></i>Quản lý thanh toán</h1>
+                <p class="mb-0 mt-2">Danh sách phiếu thanh toán tại salon</p>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Flash messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i><span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-exclamation me-2"></i><span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Filter Card -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form th:action="@{/payments}" method="get" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                <i class="fa-solid fa-magnifying-glass me-1"></i>Từ khóa
+                            </label>
+                            <input type="text" class="form-control"
+                                   placeholder="Nhập mã phiếu hoặc tên khách hàng…"
+                                   name="q" th:value="${param.q}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Từ ngày</label>
+                            <input type="date" class="form-control" name="from" th:value="${param.from}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Đến ngày</label>
+                            <input type="date" class="form-control" name="to" th:value="${param.to}">
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button class="btn btn-salon" type="submit">
+                                <i class="fa-solid fa-search me-1"></i>Tìm
+                            </button>
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <a class="btn btn-outline-secondary" th:href="@{/payments}">
+                                <i class="fa-solid fa-xmark me-1"></i>Clear
+                            </a>
+                        </div>
+                        <div class="col-md-2 d-grid ms-auto">
+                            <a class="btn btn-primary" th:href="@{/payments/new}">
+                                <i class="fa-solid fa-plus me-1"></i>Thêm thanh toán
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Table Card -->
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-dark">
+                            <tr>
+                                <th style="width:80px" class="text-center">STT</th>
+                                <th style="width:140px">Mã thanh toán</th>
+                                <th style="width:150px">Khách hàng</th>
+                                <th style="width:120px" class="text-center">PTTT</th>
+                                <th style="width:100px" class="text-center">KM (%)</th>
+                                <th style="width:140px" class="text-end">Tổng trước</th>
+                                <th style="width:120px" class="text-end">Giảm</th>
+                                <th style="width:140px" class="text-end">Tổng sau</th>
+                                <th style="width:150px" class="text-center">Ngày thanh toán</th>
+                                <th style="width:120px" class="text-center">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:if="${#lists.isEmpty(payments)}">
+                                <td colspan="10" class="text-center text-muted py-4">
+                                    <i class="fa-regular fa-inbox fa-2x mb-2"></i><br>Chưa có thanh toán nào
+                                </td>
+                            </tr>
+                            <tr th:each="p, stat : ${payments}">
+                                <td class="text-center">
+                                    <span class="badge bg-secondary" th:text="${payments.size() - stat.index}">1</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary" th:text="${p.bookingCode}">PM-20251027-001</span>
+                                </td>
+                                <td>
+                                    <strong th:text="${p.customer != null ? p.customer.name : '-'}">Nguyễn Văn A</strong>
+                                </td>
+                                <td class="text-center">
+                                    <span th:switch="${p.method}" class="badge">
+                                        <span th:case="CASH" class="bg-success" th:text="${p.method.getVietnameseName()}">Tiền mặt</span>
+                                        <span th:case="BANK_TRANSFER" class="bg-info" th:text="${p.method.getVietnameseName()}">Chuyển khoản</span>
+                                        <span th:case="CARD" class="bg-warning text-dark" th:text="${p.method.getVietnameseName()}">Thẻ</span>
+                                        <span th:case="E_WALLET" class="bg-primary" th:text="${p.method.getVietnameseName()}">Ví điện tử</span>
+                                        <span th:case="*" class="bg-secondary" th:text="${p.method.getVietnameseName()}"></span>
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span th:if="${p.discountPercent != null and p.discountPercent > 0}"
+                                          class="badge bg-danger" th:text="${p.discountPercent} + '%'">0%</span>
+                                    <span th:if="${p.discountPercent == null or p.discountPercent == 0}"
+                                          class="text-muted">-</span>
+                                </td>
+                                <td class="text-end fw-semibold"
+                                    th:text="${#numbers.formatDecimal(p.totalBefore,0,'COMMA',0,'POINT')} + ' VNĐ'">0 VNĐ</td>
+                                <td class="text-end"
+                                    th:text="${#numbers.formatDecimal(p.discountAmount,0,'COMMA',0,'POINT')} + ' VNĐ'">0 VNĐ</td>
+                                <td class="text-end fw-bold text-success"
+                                    th:text="${#numbers.formatDecimal(p.totalAfter,0,'COMMA',0,'POINT')} + ' VNĐ'">0 VNĐ</td>
+                                <td class="text-center">
+                                    <i class="fa-regular fa-clock me-1"></i>
+                                    <span th:text="${#temporals.format(p.paidAt,'dd/MM/yyyy HH:mm')}">27/10/2025 10:35</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-info"
+                                                th:onclick="'viewPayment(' + ${p.id} + ')'"
+                                                title="Xem chi tiết">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-warning"
+                                                th:onclick="'editPayment(' + ${p.id} + ')'"
+                                                title="Chỉnh sửa">
+                                            <i class="fa-regular fa-pen-to-square"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger"
+                                                th:onclick="'deletePayment(' + ${p.id} + ')'"
+                                                title="Xóa">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<footer th:replace="fragments/common :: footer"></footer>
+<div th:replace="fragments/common :: scripts"></div>
+
+<!-- Include notify fragments -->
+<th:block th:replace="fragments/notify :: confirmModal"></th:block>
+<th:block th:replace="fragments/notify :: toastContainer"></th:block>
+<th:block th:replace="fragments/notify :: notifyScripts"></th:block>
+
+<script>
+    // Payment action functions
+    function viewPayment(paymentId) {
+        // Redirect to view payment page
+        window.location.href = '/payments/' + paymentId;
+    }
+
+    function editPayment(paymentId) {
+        // Redirect to edit payment page
+        window.location.href = '/payments/' + paymentId + '/edit';
+    }
+
+    function deletePayment(paymentId) {
+        if (confirm('Bạn có chắc chắn muốn xóa thanh toán này?')) {
+            // Submit delete form
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/payments/' + paymentId + '/delete';
+
+            // Add CSRF token if available
+            const csrfToken = document.querySelector('meta[name="_csrf"]');
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_csrf';
+                csrfInput.value = csrfToken.getAttribute('content');
+                form.appendChild(csrfInput);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // Auto-hide alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
+    });
+</script>
+</body>
+</html>
