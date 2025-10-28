@@ -4,6 +4,9 @@
     <th:block th:replace="fragments/common :: head"></th:block>
     <title th:text="${pageTitle}">Quản lý khách hàng</title>
 
+    <!-- ✅ Thêm thư viện SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         html, body { height: 100%; margin: 0; }
         body {
@@ -23,7 +26,6 @@
         }
 
         .page-header {
-            border-radius:12px;
             background: linear-gradient(90deg, #6f42c1, #8b5cf6);
             color: #fff;
             padding: 32px 0;
@@ -44,6 +46,11 @@
         .form-control:focus, .form-select:focus {
             border-color: #8b5cf6;
             box-shadow: 0 0 0 .2rem rgba(139, 92, 246, 0.2);
+        }
+
+        .is-invalid {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 .15rem rgba(220,53,69,.25);
         }
 
         .btn-salon {
@@ -84,11 +91,11 @@
 
         <div class="container mb-5">
             <div class="form-card">
-                <!-- ✅ FORM DUY NHẤT -->
                 <form th:action="@{${formAction}}"
                       th:object="${form}"
                       method="post"
                       enctype="multipart/form-data"
+                      id="customerForm"
                       novalidate>
 
                     <input type="hidden" th:if="${_csrf != null}"
@@ -96,62 +103,75 @@
 
                     <!-- TÊN -->
                     <div class="mb-3">
-                        <label class="form-label">Tên khách hàng</label>
-                        <input class="form-control" th:field="*{name}" placeholder="VD: Nguyễn Văn A" required>
-                        <small class="text-danger" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></small>
+                        <label class="form-label">Tên khách hàng *</label>
+                        <input class="form-control" th:field="*{name}" placeholder="VD: Nguyễn Văn A" required
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                        <div class="text-danger mt-1" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
                     </div>
 
                     <!-- SỐ ĐIỆN THOẠI -->
                     <div class="mb-3">
-                        <label class="form-label">Số điện thoại</label>
-                        <input class="form-control" th:field="*{phone}" placeholder="VD: 0912345678"
-                               required pattern="^[0-9]{10}$" title="Số điện thoại phải gồm đúng 10 chữ số">
+                        <label class="form-label">Số điện thoại *</label>
+                        <input class="form-control" th:field="*{phone}" name="phone" placeholder="VD: 0912345678"
+                               required pattern="^[0-9]{10}$"
+                               title="Số điện thoại phải gồm đúng 10 chữ số"
+                               th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid'">
                         <small class="form-text text-muted">Chỉ nhập 10 chữ số, không có ký tự khác.</small>
-                        <small class="text-danger" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></small>
+                        <div class="text-danger mt-1" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
                     </div>
 
                     <!-- EMAIL -->
                     <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input class="form-control" th:field="*{email}" placeholder="vd@domain.com" required>
-                        <small class="text-danger" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></small>
+                        <label class="form-label">Email *</label>
+                        <input class="form-control" th:field="*{email}" placeholder="vd@domain.com" required
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
+                        <div class="text-danger mt-1" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
                     </div>
 
                     <!-- ĐỊA CHỈ -->
                     <div class="mb-3">
-                        <label class="form-label">Địa chỉ</label>
-                        <input class="form-control" th:field="*{address}" placeholder="VD: 123 Nguyễn Huệ, Q1, TP.HCM">
-                        <small class="text-danger" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></small>
+                        <label class="form-label">Địa chỉ *</label>
+                        <input class="form-control" th:field="*{address}" placeholder="VD: 123 Nguyễn Huệ, Q1, TP.HCM"
+                               required th:classappend="${#fields.hasErrors('address')} ? 'is-invalid'">
+                        <div class="text-danger mt-1" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
                     </div>
 
                     <!-- LOẠI THÀNH VIÊN -->
                     <div class="mb-3">
-                        <label class="form-label">Loại thành viên</label>
-                        <select class="form-select" th:field="*{memberType}" required>
+                        <label class="form-label">Loại thành viên *</label>
+                        <select class="form-select" th:field="*{memberType}" required
+                                th:classappend="${#fields.hasErrors('memberType')} ? 'is-invalid'">
                             <option value="">-- Chọn loại thành viên --</option>
                             <option value="MOI">MỚI</option>
                             <option value="THAN_QUEN">THÂN QUEN</option>
                             <option value="DAC_BIET">ĐẶC BIỆT</option>
                         </select>
+                        <div class="text-danger mt-1" th:if="${#fields.hasErrors('memberType')}" th:errors="*{memberType}"></div>
                     </div>
 
                     <!-- ĐIỂM TÍCH LŨY -->
                     <div class="mb-3">
-                        <label class="form-label">Điểm tích lũy</label>
-                        <input class="form-control" type="number" min="0" th:field="*{point}" placeholder="VD: 100">
+                        <label class="form-label">Điểm tích lũy *</label>
+                        <input class="form-control" type="number" min="0" th:field="*{point}" name="point" required placeholder="VD: 100"
+                               th:classappend="${#fields.hasErrors('point')} ? 'is-invalid'">
+                        <div class="text-danger mt-1" th:if="${#fields.hasErrors('point')}" th:errors="*{point}"></div>
                     </div>
 
                     <!-- GHI CHÚ -->
                     <div class="mb-3">
-                        <label class="form-label">Ghi chú</label>
-                        <textarea class="form-control" rows="3" th:field="*{note}"
-                                  placeholder="VD: Khách quen hay đặt vào thứ 7, thích dịch vụ spa..."></textarea>
+                        <label class="form-label">Ghi chú *</label>
+                        <textarea class="form-control" rows="3" th:field="*{note}" required
+                                  placeholder="VD: Khách quen hay đặt vào thứ 7, thích dịch vụ spa..."
+                                  th:classappend="${#fields.hasErrors('note')} ? 'is-invalid'"></textarea>
+                        <div class="text-danger mt-1" th:if="${#fields.hasErrors('note')}" th:errors="*{note}"></div>
                     </div>
 
-                    <!-- ẢNH KHÁCH HÀNG -->
+                    <!-- ẢNH KHÁCH HÀNG (Không bắt buộc) -->
                     <div class="mb-3">
-                        <label class="form-label">Ảnh khách hàng</label>
+                        <label class="form-label">Ảnh khách hàng (không bắt buộc)</label>
                         <input type="file" class="form-control" th:field="*{photoFile}" accept="image/*" onchange="previewImage(event)">
+                        <div class="text-danger mt-1" th:if="${#fields.hasErrors('photoFile')}" th:errors="*{photoFile}"></div>
+
                         <div th:if="${form.photo != null}" class="mt-2">
                             <img th:src="@{'/uploads/customers/' + ${form.photo}}" id="photoPreview" style="max-height:150px;">
                         </div>
@@ -160,7 +180,7 @@
                         </div>
                     </div>
 
-                    <!-- SCRIPT xem trước ảnh -->
+                    <!-- ✅ SCRIPT xem trước ảnh & kiểm tra -->
                     <script>
                         function previewImage(event) {
                             const file = event.target.files[0];
@@ -174,6 +194,86 @@
                                 reader.readAsDataURL(file);
                             }
                         }
+
+                        document.getElementById('customerForm').addEventListener('submit', function (e) {
+                            const requiredFields = this.querySelectorAll('[required]');
+                            let valid = true;
+
+                            // ✅ Kiểm tra các trường bắt buộc
+                            requiredFields.forEach(f => {
+                                // Đối với <select> phải kiểm tra value (option rỗng)
+                                if (f.tagName.toLowerCase() === 'select') {
+                                    if (!f.value || f.value.trim() === '') {
+                                        f.classList.add('is-invalid');
+                                        valid = false;
+                                    } else {
+                                        f.classList.remove('is-invalid');
+                                    }
+                                } else {
+                                    if (!f.value || !String(f.value).trim()) {
+                                        f.classList.add('is-invalid');
+                                        valid = false;
+                                    } else {
+                                        f.classList.remove('is-invalid');
+                                    }
+                                }
+                            });
+
+                            // ✅ Kiểm tra số điện thoại (chỉ số, đúng 10 chữ số)
+                            const phoneField = this.querySelector('[name="phone"]');
+                            if (phoneField) {
+                                const phoneVal = (phoneField.value || '').trim();
+                                const phoneRegex = /^[0-9]{10}$/;
+                                if (!phoneRegex.test(phoneVal)) {
+                                    e.preventDefault();
+                                    phoneField.classList.add('is-invalid');
+                                    Swal.fire({
+                                        title: "Số điện thoại không hợp lệ",
+                                        text: "Số điện thoại phải gồm đúng 10 chữ số (ví dụ: 0912345678).",
+                                        icon: "error",
+                                        confirmButtonColor: "#6f42c1",
+                                        confirmButtonText: "Đã hiểu"
+                                    });
+                                    return;
+                                } else {
+                                    phoneField.classList.remove('is-invalid');
+                                }
+                            }
+
+                            // ✅ Kiểm tra riêng điểm tích lũy (phải >= 0)
+                            const pointField = this.querySelector('[name="point"]');
+                            if (pointField) {
+                                const raw = pointField.value;
+                                // nếu rỗng thì đã bị bắt bởi required; nếu có thì parse
+                                const n = Number(raw);
+                                if (!Number.isFinite(n) || n < 0) {
+                                    e.preventDefault();
+                                    pointField.classList.add('is-invalid');
+                                    Swal.fire({
+                                        title: "Giá trị không hợp lệ!",
+                                        text: "Điểm tích lũy phải là số >= 0.",
+                                        icon: "error",
+                                        confirmButtonColor: "#6f42c1",
+                                        confirmButtonText: "Đã hiểu"
+                                    });
+                                    return;
+                                } else {
+                                    pointField.classList.remove('is-invalid');
+                                }
+                            }
+
+                            // ✅ Nếu còn trường trống → hiển thị cảnh báo
+                            if (!valid) {
+                                e.preventDefault();
+                                Swal.fire({
+                                    title: "Thiếu thông tin!",
+                                    text: "Vui lòng điền đầy đủ các thông tin bắt buộc trước khi lưu.",
+                                    icon: "warning",
+                                    confirmButtonColor: "#6f42c1",
+                                    confirmButtonText: "Đã hiểu"
+                                });
+                            }
+                        });
                     </script>
 
                     <!-- NÚT HÀNH ĐỘNG -->
