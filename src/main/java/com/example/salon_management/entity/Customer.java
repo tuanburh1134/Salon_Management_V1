@@ -4,17 +4,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Table(name = "customers",
-        indexes = {
-                @Index(name = "idx_customers_phone", columnList = "phone"),
-                @Index(name = "idx_customers_email", columnList = "email")
-        })
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
+@Table(name = "customers")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Customer {
 
     @Id
@@ -26,38 +23,37 @@ public class Customer {
     private String stt; // Số thứ tự hiển thị trong danh sách
 
     @NotBlank(message = "Tên không được để trống")
-    @Size(max = 120, message = "Tên tối đa 120 ký tự")
     @Column(nullable = false, length = 120)
     private String name;
 
-    @NotBlank(message = "Số điện thoại không được để trống")
-    @Size(max = 15, message = "SĐT tối đa 15 ký tự")
-    @Pattern(
-            regexp = "^(?:\\+84\\d{9,10}|0\\d{9})$",
-            message = "Số điện thoại không hợp lệ (vd: 0xxxxxxxxx hoặc +84xxxxxxxxx)"
-    )
-    @Column(nullable = false, length = 15/*, unique = true*/) // bật unique nếu bạn muốn không trùng
+    @Size(max = 15, message = "Số điện thoại tối đa 15 ký tự")
+    @Column(length = 15)
     private String phone;
 
-    @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không hợp lệ")
-    @Size(max = 120, message = "Email tối đa 120 ký tự")
-    @Column(nullable = false, length = 120/*, unique = true*/) // có thể unique nếu cần
+    @Size(max = 120)
+    @Column(length = 120)
     private String email;
 
-    @NotBlank(message = "Loại thành viên không được để trống")
-    @Size(max = 30, message = "Loại thành viên tối đa 30 ký tự")
-    @Pattern(
-            regexp = "^(?i)(Thường|VIP|Vàng|Bạch kim)$",
-            message = "Loại thành viên chỉ chấp nhận: Thường, VIP, Vàng, Bạch kim"
-    )
-    @Column(nullable = false, length = 30)
-    private String memberType; // Thường, VIP, Vàng, Bạch kim
 
-    @NotNull(message = "Điểm tích lũy không được để trống")
-    @Min(value = 0, message = "Điểm tích lũy phải >= 0")
-    @Column(nullable = false)
-    private Integer point = 0;
+    /**
+     * Loại thành viên:
+     * - MOI: Khách hàng mới
+     * - THAN_QUEN: Khách hàng thân quen
+     * - DAC_BIET: Khách hàng đặc biệt
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    private MemberType memberType = MemberType.MOI;
+
+    @Min(0)
+    private Integer point = 0; // điểm tích lũy
+
+    @Column(length = 255)
+    private String address; // 🏠 Địa chỉ khách hàng
+
+    @Column(length = 500)
+    private String note; // 📝 Ghi chú
 
     @Column(length = 255)
     private String photo; // 🖼️ Đường dẫn ảnh đại diện (VD: "uploads/customers/kh001.jpg")
@@ -79,7 +75,6 @@ public class Customer {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (deleted == null) deleted = false;
-        if (point == null) point = 0;
     }
 
     @PreUpdate
@@ -87,7 +82,72 @@ public class Customer {
         updatedAt = LocalDateTime.now();
     }
 
-    // ======= QUAN HỆ VỚI ĐẶT LỊCH =======
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = false)
-    private List<Booking> bookings = new ArrayList<>();
+    // ======= HÀM TIỆN ÍCH =======
+
+    /** Ảnh mặc định nếu không có */
+    public String getPhotoPath() {
+        return (photo != null && !photo.isEmpty())
+                ? "/uploads/customers/" + photo
+                : "/images/default-avatar.png";
+    }
+
+    public void softDelete() {
+        this.deleted = true;
+    }
+
+    public void restore() {
+        this.deleted = false;
+    }
+
+    public void addPoints(int points) {
+        if (points > 0) {
+            this.point += points;
+        }
+    }
+
+    public void subtractPoints(int points) {
+        if (points > 0 && this.point >= points) {
+            this.point -= points;
+        }
+    }
+
+    public void updateMemberTypeByPoints() {
+        if (this.point < 100) {
+            this.memberType = MemberType.MOI;
+        } else if (this.point < 300) {
+            this.memberType = MemberType.THAN_QUEN;
+        } else {
+            this.memberType = MemberType.DAC_BIET;
+        }
+    }
+
+    public boolean isActive() {
+        return !this.deleted;
+    }
+
+    public String shortInfo() {
+        return String.format("[%s] %s - %s (%s) [%s]",
+                stt != null ? stt : "?", name, phone, email, memberType);
+    }
+
+    public void generateStt(Long index) {
+        this.stt = String.format("KH%03d", index);
+    }
+
+    // ======= ENUM LOẠI THÀNH VIÊN =======
+    public enum MemberType {
+        MOI("Mới"),
+        THAN_QUEN("Thân quen"),
+        DAC_BIET("Đặc biệt");
+
+        private final String displayName;
+
+        MemberType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
 }

@@ -146,7 +146,7 @@
                                     <option value="">-- Chọn nhân viên --</option>
                                     <option th:each="employee : ${employees}"
                                             th:value="${employee.id}"
-                                            th:text="${employee.name + ' - ' + employee.position + ' - ' + employee.specialty + ' - ' + employee.shift}"></option>
+                                            th:text="${employee.name}"></option>
                                 </select>
                                 <small class="text-danger" th:errors="*{employeeId}"></small>
                             </div>
