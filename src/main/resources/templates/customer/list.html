@@ -36,7 +36,7 @@
         html, body { height:100%; margin:0; }
         body { display:flex; flex-direction:column; min-height:100vh; background:#f8f9fa; }
         main { flex:1; }
-        .page-header { background: linear-gradient(90deg,#6f42c1,#8b5cf6); color:#fff; padding:32px 0; margin-bottom:24px; }
+        .page-header {border-radius:12px; background: linear-gradient(90deg,#6f42c1,#8b5cf6); color:#fff; padding:32px 0; margin-bottom:24px; }
         .card { border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); overflow:hidden; }
         .btn-salon { background: linear-gradient(135deg,#6f42c1,#8b5cf6); color:#fff; border-radius:8px; border:0; }
         .table thead { background:#343a40; color:#fff; }
@@ -126,9 +126,9 @@
                         </div>
 
                         <!-- Nút thêm -->
-                        <div class="col-md-2 text-end">
-                            <a class="btn btn-primary w-100" th:href="@{/customers/create}">
-                                <i class="fa-solid fa-plus me-1"></i> Thêm khách hàng
+                        <div class="col-md-2 d-grid ms-auto">
+                            <a class="btn btn-salon d-flex align-items-center justify-content-center" th:href="@{/customers/create}">
+                                <i class="fa-solid fa-plus me-1"></i><span>Thêm khách hàng</span>
                             </a>
                         </div>
                     </form>
