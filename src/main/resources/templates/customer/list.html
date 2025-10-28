@@ -7,6 +7,39 @@
     <title>Quản lý khách hàng</title>
 
     <style>
+        /* === Nút X trong ô tìm kiếm (chuẩn pixel Bootstrap 5.3) === */
+        .position-relative input#searchInput {
+            padding-right: 2.3rem; /* chừa chỗ cho nút X */
+        }
+
+        #clearSearch {
+            position: absolute;
+            top: 50%;
+            right: 0.75rem;
+            transform: translateY(calc(25% + 1px)); /* canh giữa chuẩn */
+            border: none;
+            background: transparent;
+            color: #6c757d;
+            cursor: pointer;
+            z-index: 5;
+            line-height: 1;
+            height: 1.2rem;
+            width: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        #clearSearch i {
+            font-size: 1.05rem; /* hơi lớn hơn để cân đối */
+            transition: color 0.2s ease;
+        }
+
+        #clearSearch:hover i {
+            color: #dc3545; /* đỏ khi hover */
+        }
+
         /* === Layout & style nhỏ gọn === */
         html, body { height:100%; margin:0; }
         body { display:flex; flex-direction:column; min-height:100vh; background:#f8f9fa; }
@@ -58,13 +91,22 @@
                 <div class="card-body">
                     <form class="row g-3 align-items-end justify-content-between"
                           th:action="@{/customers}" method="get">
-                        <div class="col-md-4">
+                        <div class="col-md-4 position-relative">
                             <label class="form-label fw-semibold d-flex align-items-center">
                                 <i class="fa-solid fa-magnifying-glass me-2"></i> Từ khóa
                             </label>
-                            <input class="form-control" name="q"
+
+                            <!-- Ô tìm kiếm có nút X -->
+                            <input class="form-control" id="searchInput"
+                                   name="q"
                                    placeholder="Tìm theo Tên / SĐT / Email"
                                    th:value="${q}">
+
+                            <!-- Nút X xóa nội dung -->
+                            <button type="button" id="clearSearch"
+                                    style="display:none;">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                         </div>
 
                         <!-- Lọc loại thành viên -->
@@ -81,11 +123,6 @@
                                                 th:text="${(mt == 'MOI' ? 'MỚI' : mt == 'THAN_QUEN' ? 'THÂN QUEN' :'ĐẶC BIỆT')}">
                                         </option>
                                     </select>
-
-                                    <a class="btn btn-outline-secondary px-3 d-flex align-items-center justify-content-center"
-                                       th:href="@{/customers}">
-                                        <i class="fa-solid fa-xmark me-1"></i> Clear
-                                    </a>
 
                                     <button class="btn btn-salon px-3 d-flex align-items-center justify-content-center"
                                             type="submit">
@@ -137,31 +174,33 @@
                                 <td th:text="${c.phone}">SĐT</td>
                                 <td th:text="${c.email}">Email</td>
                                 <td>
-                                    <span class="badge-type"
-                                          th:classappend="${c.memberType}"
-                                          th:text="${c.memberType}">MOI</span>
+    <span class="badge-type"
+          th:classappend="${c.memberType.name()}"
+          th:text="${c.memberType.name() == 'MOI' ? 'MỚI' :
+                    (c.memberType.name() == 'THAN_QUEN' ? 'THÂN THIẾT' :
+                    (c.memberType.name() == 'DAC_BIET' ? 'ĐẶC BIỆT' : '---'))}">
+        MỚI
+    </span>
                                 </td>
+
                                 <td class="text-end"
                                     th:text="${#numbers.formatDecimal(c.point,0,'COMMA',0,'POINT')} + ' điểm'">
                                     0 điểm
                                 </td>
 
                                 <td class="text-end">
-                                    <!-- Nút xem -->
                                     <a class="btn btn-sm btn-outline-info me-1"
                                        th:href="@{|/customers/${c.id}/view?q=${q}&memberType=${memberType}&page=${data.number}&size=${data.size}&sortBy=${sortBy}&dir=${dir}|}"
                                        title="Xem chi tiết">
                                         <i class="fa-regular fa-eye"></i>
                                     </a>
 
-                                    <!-- Nút sửa -->
                                     <a class="btn btn-sm btn-outline-warning me-1"
                                        th:href="@{|/customers/${c.id}/edit?q=${q}&memberType=${memberType}&page=${data.number}&size=${data.size}&sortBy=${sortBy}&dir=${dir}|}"
                                        title="Chỉnh sửa">
                                         <i class="fa-regular fa-pen-to-square"></i>
                                     </a>
 
-                                    <!-- Nút xoá (duy nhất) -->
                                     <form th:action="@{|/customers/${c.id}/delete?q=${q}&memberType=${memberType}&page=${data.number}|}"
                                           method="post" class="d-inline delete-form">
                                         <input type="hidden" th:if="${_csrf != null}"
@@ -175,7 +214,6 @@
                                     </form>
                                 </td>
                             </tr>
-
                             </tbody>
                         </table>
                     </div>
@@ -205,9 +243,7 @@
                                 th:classappend="${i == data.number} ? 'active'">
                                 <a class="page-link"
                                    th:text="${i + 1}"
-                                   th:href="@{/customers(page=${i}, q=${q}, memberType=${memberType})}">
-                                    1
-                                </a>
+                                   th:href="@{/customers(page=${i}, q=${q}, memberType=${memberType})}">1</a>
                             </li>
 
                             <li class="page-item" th:classappend="${data.last} ? 'disabled'">
@@ -259,8 +295,8 @@
 
 <!-- Script -->
 <script>
-    document.addEventListener('DOMContentLoaded', function(){
-        // Toast tự ẩn (3s)
+    document.addEventListener('DOMContentLoaded', function() {
+        // ====== TOAST TỰ ẨN ======
         const toastEl = document.getElementById('toastMessage');
         if (toastEl) {
             setTimeout(() => {
@@ -271,24 +307,45 @@
             }, 3000);
         }
 
-        // Modal xoá xác nhận
-        const deleteModalEl = document.getElementById('deleteModal');
-        const bsModal = new bootstrap.Modal(deleteModalEl);
-        let currentForm = null;
+        // ====== NÚT ❌ TRONG Ô TÌM KIẾM ======
+        const input = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearch');
 
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const name = this.getAttribute('data-name') || '...';
-                document.getElementById('deleteMessage').innerHTML =
-                    `Bạn có chắc chắn muốn xoá khách hàng <b>"${name}"</b>?<br>Hành động này <b>không thể hoàn tác</b>.`;
-                currentForm = this.closest('form');
-                bsModal.show();
+        if (input && clearBtn) {
+            function toggleClearBtn() {
+                clearBtn.style.display = input.value.trim() ? 'flex' : 'none';
+            }
+
+            input.addEventListener('input', toggleClearBtn);
+            toggleClearBtn();
+
+            clearBtn.addEventListener('click', function() {
+                input.value = '';
+                toggleClearBtn();
+                input.focus();
             });
-        });
+        }
 
-        document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
-            if (currentForm) currentForm.submit();
-        });
+        // ====== MODAL XOÁ KHÁCH HÀNG ======
+        const deleteModalEl = document.getElementById('deleteModal');
+        if (deleteModalEl) {
+            const bsModal = new bootstrap.Modal(deleteModalEl);
+            let currentForm = null;
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const name = this.getAttribute('data-name') || '...';
+                    document.getElementById('deleteMessage').innerHTML =
+                        `Bạn có chắc chắn muốn xoá khách hàng <b>"${name}"</b>?<br>Hành động này <b>không thể hoàn tác</b>.`;
+                    currentForm = this.closest('form');
+                    bsModal.show();
+                });
+            });
+
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                if (currentForm) currentForm.submit();
+            });
+        }
     });
 </script>
 

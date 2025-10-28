@@ -118,6 +118,7 @@ public class BookingController {
         bookingService.delete(id);
         ra.addFlashAttribute("msg", "Đã xóa đặt lịch");
         return "redirect:/bookings";
+
     }
 
     // ========================= Helpers =========================
