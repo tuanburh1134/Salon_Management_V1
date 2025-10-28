@@ -10,9 +10,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
@@ -20,7 +23,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class CustomerController {
 
     private final CustomerService service;
-    private final CustomerService customerService;
+
     // ========================== DANH SÁCH KHÁCH HÀNG ==========================
     @GetMapping({"", "/", "/list"})
     public String list(@RequestParam(value = "q", required = false) String keyword,
@@ -46,10 +49,8 @@ public class CustomerController {
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("dir", dir);
         model.addAttribute("nextDir", nextDir);
-
         model.addAttribute("sortByNameUrl", buildUrl(keyword, memberType, 0, size, "name", nextDir));
         model.addAttribute("sortByPointUrl", buildUrl(keyword, memberType, 0, size, "point", nextDir));
-
         model.addAttribute("hasPrev", customers.hasPrevious());
         model.addAttribute("hasNext", customers.hasNext());
         model.addAttribute("currentPage", customers.getNumber() + 1);
@@ -67,7 +68,7 @@ public class CustomerController {
         return "customer/list";
     }
 
-    // ========================== THÊM MỚI KHÁCH HÀNG ==========================
+    // ========================== FORM TẠO MỚI KHÁCH HÀNG ==========================
     @GetMapping("/create")
     public String createForm(Model model) {
         setupFormModel(model, new CustomerForm(), "Thêm khách hàng", "/customers/create", "Lưu mới", false);
@@ -76,18 +77,28 @@ public class CustomerController {
 
     @PostMapping("/create")
     public String create(@Valid @ModelAttribute("form") CustomerForm form,
-                         BindingResult br, RedirectAttributes ra, Model model) {
-        if (br.hasErrors()) {
+                         BindingResult result,
+                         RedirectAttributes ra,
+                         Model model) {
+
+        if (result.hasErrors()) {
             setupFormModel(model, form, "Thêm khách hàng", "/customers/create", "Lưu mới", false);
             return "customer/form";
         }
 
-        service.create(form);
-        ra.addFlashAttribute("msg", " Đã thêm khách hàng mới thành công!");
-        return "redirect:/customers";
+        try {
+            handleFileUpload(form);
+            service.create(form);
+            ra.addFlashAttribute("msg", "✅ Thêm khách hàng thành công!");
+            return "redirect:/customers";
+        } catch (IOException e) {
+            model.addAttribute("error", "⚠️ Lỗi khi lưu ảnh: " + e.getMessage());
+            setupFormModel(model, form, "Thêm khách hàng", "/customers/create", "Lưu mới", false);
+            return "customer/form";
+        }
     }
 
-    // ========================== CHỈNH SỬA KHÁCH HÀNG ==========================
+    // ========================== FORM CHỈNH SỬA KHÁCH HÀNG ==========================
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model, RedirectAttributes ra) {
         try {
@@ -96,8 +107,11 @@ public class CustomerController {
             f.setName(c.getName());
             f.setPhone(c.getPhone());
             f.setEmail(c.getEmail());
-            f.setMemberType(c.getMemberType() != null ? c.getMemberType().name() : null);
+            f.setMemberType(c.getMemberType() != null ? c.getMemberType() : Customer.MemberType.MOI);
             f.setPoint(c.getPoint());
+            f.setAddress(c.getAddress());
+            f.setNote(c.getNote());
+            f.setPhoto(c.getPhoto());
 
             setupFormModel(model, f, "Chỉnh sửa khách hàng", "/customers/" + id + "/edit", "Cập nhật", true);
             return "customer/form";
@@ -110,19 +124,32 @@ public class CustomerController {
     @PostMapping("/{id}/edit")
     public String update(@PathVariable Long id,
                          @Valid @ModelAttribute("form") CustomerForm form,
-                         BindingResult br, RedirectAttributes ra, Model model) {
+                         BindingResult br,
+                         RedirectAttributes ra,
+                         Model model) {
+
         if (br.hasErrors()) {
             setupFormModel(model, form, "Chỉnh sửa khách hàng", "/customers/" + id + "/edit", "Cập nhật", true);
             return "customer/form";
         }
 
         try {
+            Customer existing = service.get(id);
+
+            if (form.getPhotoFile() != null && !form.getPhotoFile().isEmpty()) {
+                handleFileUpload(form);
+            } else {
+                form.setPhoto(existing.getPhoto());
+            }
+
             service.update(id, form);
-            ra.addFlashAttribute("msg", " Cập nhật thông tin khách hàng thành công!");
-        } catch (RuntimeException e) {
-            ra.addFlashAttribute("msg", "⚠️ Cập nhật thất bại: " + e.getMessage());
+            ra.addFlashAttribute("msg", "✅ Cập nhật thông tin khách hàng thành công!");
+            return "redirect:/customers";
+        } catch (IOException e) {
+            model.addAttribute("error", "⚠️ Không thể lưu ảnh: " + e.getMessage());
+            setupFormModel(model, form, "Chỉnh sửa khách hàng", "/customers/" + id + "/edit", "Cập nhật", true);
+            return "customer/form";
         }
-        return "redirect:/customers";
     }
 
     // ========================== XOÁ KHÁCH HÀNG ==========================
@@ -135,6 +162,7 @@ public class CustomerController {
                          @RequestParam(defaultValue = "name") String sortBy,
                          @RequestParam(defaultValue = "asc") String dir,
                          RedirectAttributes ra) {
+
         try {
             service.delete(id);
             ra.addFlashAttribute("msg", "🗑 Đã xoá khách hàng thành công!");
@@ -142,20 +170,41 @@ public class CustomerController {
             ra.addFlashAttribute("msg", "⚠️ Không thể xoá: " + e.getMessage());
         }
 
-        // 🔁 Giữ nguyên trạng thái lọc / tìm kiếm / phân trang sau khi xoá
-        String redirectUrl = buildUrl(q, memberType, page, size, sortBy, dir);
-        return "redirect:" + redirectUrl;
+        return "redirect:" + buildUrl(q, memberType, page, size, sortBy, dir);
     }
+
+    // ========================== XEM CHI TIẾT KHÁCH HÀNG ==========================
     @GetMapping("/{id}/view")
     public String viewCustomer(@PathVariable Long id, Model model) {
-        Customer customer = customerService.getById(id)
+        Customer customer = service.getById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khách hàng ID: " + id));
-
         model.addAttribute("customer", customer);
         return "customer/detail";
     }
 
     // ========================== HÀM HỖ TRỢ ==========================
+    /** Upload ảnh khách hàng, tạo thư mục nếu chưa có (ổn định trên mọi hệ điều hành) */
+    private void handleFileUpload(CustomerForm form) throws IOException {
+        MultipartFile photoFile = form.getPhotoFile();
+        if (photoFile != null && !photoFile.isEmpty()) {
+            // ✅ Dùng đường dẫn tuyệt đối tới thư mục uploads/customers/
+            Path uploadPath = Paths.get(System.getProperty("user.dir"), "uploads", "customers");
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            // ✅ Sinh tên file duy nhất
+            String filename = UUID.randomUUID() + "_" + photoFile.getOriginalFilename();
+
+            // ✅ Lưu file thật sự
+            Path filePath = uploadPath.resolve(filename);
+            photoFile.transferTo(filePath.toFile());
+
+            // ✅ Lưu tên file vào form để lưu DB
+            form.setPhoto(filename);
+        }
+    }
+
     private void setupFormModel(Model model, CustomerForm form, String title, String action, String submit, boolean isEdit) {
         model.addAttribute("form", form);
         model.addAttribute("pageTitle", title);
@@ -167,6 +216,7 @@ public class CustomerController {
     private String buildUrl(String q, String memberType, int page, int size, String sortBy, String dir) {
         String kw = (q == null || q.isBlank()) ? "" : q.trim().replace(" ", "%20");
         String mt = (memberType == null || memberType.isBlank()) ? "" : memberType;
-        return "/customers?q=" + kw + "&memberType=" + mt + "&page=" + page + "&size=" + size + "&sortBy=" + sortBy + "&dir=" + dir;
+        return "/customers?q=" + kw + "&memberType=" + mt + "&page=" + page + "&size=" + size
+                + "&sortBy=" + sortBy + "&dir=" + dir;
     }
 }

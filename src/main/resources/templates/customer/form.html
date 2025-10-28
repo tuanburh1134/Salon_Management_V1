@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <!-- Import head chung -->
     <th:block th:replace="fragments/common :: head"></th:block>
     <title th:text="${pageTitle}">Quản lý khách hàng</title>
 
     <style>
-        /* === Giao diện tổng thể === */
         html, body { height: 100%; margin: 0; }
         body {
             display: flex;
@@ -24,7 +22,6 @@
             padding: 12px 0;
         }
 
-        /* === Header === */
         .page-header {
             background: linear-gradient(90deg, #6f42c1, #8b5cf6);
             color: #fff;
@@ -32,12 +29,7 @@
             margin-bottom: 24px;
             box-shadow: 0 3px 8px rgba(0,0,0,.1);
         }
-        .page-header h1 {
-            font-weight: 700;
-            margin: 0;
-        }
 
-        /* === Form Container === */
         .form-card {
             background-color: #fff;
             border-radius: 12px;
@@ -47,11 +39,7 @@
             margin: 0 auto;
         }
 
-        .form-label {
-            font-weight: 600;
-            color: #212529;
-        }
-
+        .form-label { font-weight: 600; color: #212529; }
         .form-control:focus, .form-select:focus {
             border-color: #8b5cf6;
             box-shadow: 0 0 0 .2rem rgba(139, 92, 246, 0.2);
@@ -72,15 +60,7 @@
             color: #fff;
         }
 
-        .btn-outline-secondary i, .btn-salon i {
-            margin-right: 6px;
-        }
-
-        @media (max-width: 768px) {
-            .form-card {
-                padding: 20px;
-            }
-        }
+        @media (max-width: 768px) { .form-card { padding: 20px; } }
     </style>
 </head>
 
@@ -88,12 +68,9 @@
 <header th:replace="fragments/common :: header"></header>
 
 <div class="d-flex flex-grow-1">
-    <!-- SIDEBAR -->
     <nav th:replace="fragments/common :: navigation"></nav>
 
-    <!-- NỘI DUNG CHÍNH -->
     <main class="flex-fill">
-        <!-- HEADER -->
         <div class="page-header">
             <div class="container">
                 <h1 class="mb-0">
@@ -104,14 +81,19 @@
             </div>
         </div>
 
-        <!-- FORM -->
         <div class="container mb-5">
             <div class="form-card">
-                <form th:action="@{${formAction}}" th:object="${form}" method="post" novalidate>
+                <!-- ✅ FORM DUY NHẤT -->
+                <form th:action="@{${formAction}}"
+                      th:object="${form}"
+                      method="post"
+                      enctype="multipart/form-data"
+                      novalidate>
+
                     <input type="hidden" th:if="${_csrf != null}"
                            th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
-                    <!-- TÊN KHÁCH HÀNG -->
+                    <!-- TÊN -->
                     <div class="mb-3">
                         <label class="form-label">Tên khách hàng</label>
                         <input class="form-control" th:field="*{name}" placeholder="VD: Nguyễn Văn A" required>
@@ -122,8 +104,7 @@
                     <div class="mb-3">
                         <label class="form-label">Số điện thoại</label>
                         <input class="form-control" th:field="*{phone}" placeholder="VD: 0912345678"
-                               required pattern="^[0-9]{10}$"
-                               title="Số điện thoại phải gồm đúng 10 chữ số">
+                               required pattern="^[0-9]{10}$" title="Số điện thoại phải gồm đúng 10 chữ số">
                         <small class="form-text text-muted">Chỉ nhập 10 chữ số, không có ký tự khác.</small>
                         <small class="text-danger" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></small>
                     </div>
@@ -135,24 +116,64 @@
                         <small class="text-danger" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></small>
                     </div>
 
+                    <!-- ĐỊA CHỈ -->
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ</label>
+                        <input class="form-control" th:field="*{address}" placeholder="VD: 123 Nguyễn Huệ, Q1, TP.HCM">
+                        <small class="text-danger" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></small>
+                    </div>
+
                     <!-- LOẠI THÀNH VIÊN -->
                     <div class="mb-3">
                         <label class="form-label">Loại thành viên</label>
                         <select class="form-select" th:field="*{memberType}" required>
                             <option value="">-- Chọn loại thành viên --</option>
-                            <option value="MOI" th:selected="${form.memberType == 'MOI'}">MỚI</option>
-                            <option value="THAN_QUEN" th:selected="${form.memberType == 'THAN_QUEN'}">THÂN QUEN</option>
-                            <option value="DAC_BIET" th:selected="${form.memberType == 'DAC_BIET'}">ĐẶC BIỆT</option>
+                            <option value="MOI">MỚI</option>
+                            <option value="THAN_QUEN">THÂN QUEN</option>
+                            <option value="DAC_BIET">ĐẶC BIỆT</option>
                         </select>
-                        <small class="text-danger" th:if="${#fields.hasErrors('memberType')}" th:errors="*{memberType}"></small>
                     </div>
 
                     <!-- ĐIỂM TÍCH LŨY -->
                     <div class="mb-3">
                         <label class="form-label">Điểm tích lũy</label>
-                        <input class="form-control" type="number" min="0" th:field="*{point}" placeholder="VD: 100" required>
-                        <small class="text-danger" th:if="${#fields.hasErrors('point')}" th:errors="*{point}"></small>
+                        <input class="form-control" type="number" min="0" th:field="*{point}" placeholder="VD: 100">
                     </div>
+
+                    <!-- GHI CHÚ -->
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <textarea class="form-control" rows="3" th:field="*{note}"
+                                  placeholder="VD: Khách quen hay đặt vào thứ 7, thích dịch vụ spa..."></textarea>
+                    </div>
+
+                    <!-- ẢNH KHÁCH HÀNG -->
+                    <div class="mb-3">
+                        <label class="form-label">Ảnh khách hàng</label>
+                        <input type="file" class="form-control" th:field="*{photoFile}" accept="image/*" onchange="previewImage(event)">
+                        <div th:if="${form.photo != null}" class="mt-2">
+                            <img th:src="@{'/uploads/customers/' + ${form.photo}}" id="photoPreview" style="max-height:150px;">
+                        </div>
+                        <div th:if="${form.photo == null}" class="mt-2">
+                            <img id="photoPreview" style="max-height:150px; display:none;">
+                        </div>
+                    </div>
+
+                    <!-- SCRIPT xem trước ảnh -->
+                    <script>
+                        function previewImage(event) {
+                            const file = event.target.files[0];
+                            const preview = document.getElementById('photoPreview');
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = e => {
+                                    preview.src = e.target.result;
+                                    preview.style.display = 'block';
+                                };
+                                reader.readAsDataURL(file);
+                            }
+                        }
+                    </script>
 
                     <!-- NÚT HÀNH ĐỘNG -->
                     <div class="d-flex justify-content-end gap-2 mt-4">

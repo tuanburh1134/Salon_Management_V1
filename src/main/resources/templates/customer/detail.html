@@ -18,6 +18,8 @@
             margin-bottom: 24px;
             box-shadow: 0 3px 8px rgba(0,0,0,0.1);
         }
+        .info-label { font-weight: 600; color: #333; }
+        .info-value { color: #555; }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -34,28 +36,67 @@
         </div>
 
         <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <h4 class="text-primary fw-bold mb-3" th:text="${customer.name}">Tên khách hàng</h4>
+            <div class="text-center mb-4">
+                <img th:src="${customer.photoPath}"
+                     alt="Ảnh khách hàng"
+                     class="rounded-circle shadow-sm"
+                     style="width: 150px; height: 150px; object-fit: cover;">
+            </div>
 
-                <p><strong>Số điện thoại:</strong> <span th:text="${customer.phone}">0123456789</span></p>
-                <p><strong>Email:</strong> <span th:text="${customer.email}">example@email.com</span></p>
+            <h4 class="text-primary fw-bold mb-3 text-center" th:text="${customer.name}">Tên khách hàng</h4>
 
-                <p><strong>Loại thành viên:</strong>
-                    <span class="badge"
-                          th:classappend="${customer.memberType == 'MOI' ? 'bg-secondary' :
-                                          (customer.memberType == 'THAN_QUEN' ? 'bg-primary' : 'bg-warning text-dark')}"
-                          th:text="${customer.memberType}">
-                        MOI
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <p><span class="info-label">📞 Số điện thoại:</span>
+                            <span class="info-value" th:text="${customer.phone}">0123456789</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><span class="info-label">📧 Email:</span>
+                            <span class="info-value" th:text="${customer.email}">example@email.com</span></p>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <p><span class="info-label">💳 Loại thành viên:</span>
+                            <span class="badge"
+                                  th:classappend="${customer.memberType == 'MOI' ? 'bg-secondary' :
+                                                  (customer.memberType == 'THAN_QUEN' ? 'bg-primary' : 'bg-warning text-dark')}"
+                                  th:text="${customer.memberType}">
+                                MOI
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><span class="info-label">⭐ Điểm tích lũy:</span>
+                            <span class="info-value" th:text="${customer.point} + ' điểm'">0 điểm</span></p>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <p><span class="info-label">🏠 Địa chỉ:</span>
+                            <span class="info-value"
+                                  th:text="${customer.address != null && customer.address != '' ? customer.address : 'Chưa có'}">
+                                Chưa có
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><span class="info-label">📅 Ngày tạo:</span>
+                            <span class="info-value"
+                                  th:text="${customer.createdAt != null ? #temporals.format(customer.createdAt, 'dd/MM/yyyy HH:mm') : 'Không xác định'}">
+                                01/01/2024 10:00
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <p><span class="info-label">📝 Ghi chú:</span>
+                    <span class="info-value"
+                          th:text="${customer.note != null && customer.note != '' ? customer.note : 'Không có'}">
+                        Không có
                     </span>
-                </p>
-
-                <p><strong>Điểm tích lũy:</strong>
-                    <span th:text="${customer.point} + ' điểm'">0 điểm</span>
-                </p>
-
-                <!-- Ghi chú: kiểm tra null an toàn -->
-                <p><strong>Ghi chú:</strong>
-                    <span th:text="${customer.note != null and customer.note != '' ? customer.note : 'Không có'}">Không có</span>
                 </p>
 
                 <hr>

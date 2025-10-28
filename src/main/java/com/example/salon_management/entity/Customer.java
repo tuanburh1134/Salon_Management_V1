@@ -3,7 +3,6 @@ package com.example.salon_management.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -36,6 +35,7 @@ public class Customer {
     @Column(length = 120)
     private String email;
 
+
     /**
      * Loại thành viên:
      * - MOI: Khách hàng mới
@@ -49,6 +49,15 @@ public class Customer {
     @Min(0)
     private Integer point = 0; // điểm tích lũy
 
+    @Column(length = 255)
+    private String address; // 🏠 Địa chỉ khách hàng
+
+    @Column(length = 500)
+    private String note; // 📝 Ghi chú
+
+    @Column(length = 255)
+    private String photo; // 🖼️ Đường dẫn ảnh đại diện (VD: "uploads/customers/kh001.jpg")
+    private String image;
     // ======= TRẠNG THÁI =======
     @Column(nullable = false)
     private Boolean deleted = false;
@@ -75,31 +84,33 @@ public class Customer {
 
     // ======= HÀM TIỆN ÍCH =======
 
-    /** Đánh dấu khách hàng là đã xóa (xóa mềm) */
+    /** Ảnh mặc định nếu không có */
+    public String getPhotoPath() {
+        return (photo != null && !photo.isEmpty())
+                ? "/uploads/customers/" + photo
+                : "/images/default-avatar.png";
+    }
+
     public void softDelete() {
         this.deleted = true;
     }
 
-    /** Phục hồi khách hàng đã xóa */
     public void restore() {
         this.deleted = false;
     }
 
-    /** Cộng thêm điểm tích lũy */
     public void addPoints(int points) {
         if (points > 0) {
             this.point += points;
         }
     }
 
-    /** Trừ điểm tích lũy (nếu đủ điểm) */
     public void subtractPoints(int points) {
         if (points > 0 && this.point >= points) {
             this.point -= points;
         }
     }
 
-    /** Chuyển loại thành viên tự động dựa trên điểm tích lũy */
     public void updateMemberTypeByPoints() {
         if (this.point < 100) {
             this.memberType = MemberType.MOI;
@@ -110,18 +121,15 @@ public class Customer {
         }
     }
 
-    /** Kiểm tra khách hàng còn hoạt động */
     public boolean isActive() {
         return !this.deleted;
     }
 
-    /** Hiển thị thông tin rút gọn cho debug hoặc log */
     public String shortInfo() {
         return String.format("[%s] %s - %s (%s) [%s]",
                 stt != null ? stt : "?", name, phone, email, memberType);
     }
 
-    /** Gán số thứ tự tự động (ví dụ: KH001, KH002, ...) */
     public void generateStt(Long index) {
         this.stt = String.format("KH%03d", index);
     }
@@ -141,15 +149,5 @@ public class Customer {
         public String getDisplayName() {
             return displayName;
         }
-    }
-    @Column(length = 500)
-    private String note;
-
-    public String getNote() {
-        return note;
-    }
-
-    public void setNote(String note) {
-        this.note = note;
     }
 }

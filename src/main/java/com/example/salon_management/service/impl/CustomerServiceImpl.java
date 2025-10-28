@@ -9,8 +9,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-import java.util.Optional;
+
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +19,7 @@ import java.util.List;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository repo;
-    private final CustomerRepository customerRepository;
+
     // ================== TÌM KIẾM & PHÂN TRANG ==================
     @Override
     public Page<Customer> search(String keyword, Pageable pageable) {
@@ -34,12 +35,10 @@ public class CustomerServiceImpl implements CustomerService {
         String kw = (keyword == null) ? "" : keyword.trim();
         String mt = (memberType == null) ? "" : memberType.trim();
 
-        // Không filter gì cả
         if (kw.isBlank() && mt.isBlank()) {
             return repo.findByDeletedFalse(pageable);
         }
 
-        // Chỉ lọc loại thành viên
         if (kw.isBlank() && !mt.isBlank()) {
             try {
                 MemberType type = MemberType.valueOf(mt);
@@ -49,12 +48,10 @@ public class CustomerServiceImpl implements CustomerService {
             }
         }
 
-        // Chỉ tìm kiếm theo từ khóa
         if (!kw.isBlank() && mt.isBlank()) {
             return repo.search(kw, pageable);
         }
 
-        // Kết hợp tìm kiếm + lọc loại thành viên
         try {
             MemberType type = MemberType.valueOf(mt);
             return repo.searchByKeywordAndMemberType(kw, type, pageable);
@@ -70,6 +67,11 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new RuntimeException("❌ Không tìm thấy khách hàng có ID=" + id));
     }
 
+    @Override
+    public Optional<Customer> getById(Long id) {
+        return repo.findById(id);
+    }
+
     // ================== THÊM MỚI KHÁCH HÀNG ==================
     @Override
     public void create(CustomerForm f) {
@@ -77,8 +79,11 @@ public class CustomerServiceImpl implements CustomerService {
                 .name(f.getName())
                 .phone(f.getPhone())
                 .email(f.getEmail())
-                .memberType(MemberType.valueOf(f.getMemberType()))
+                .memberType(f.getMemberType() != null ? f.getMemberType() : MemberType.MOI)
                 .point(f.getPoint() == null ? 0 : f.getPoint())
+                .address(f.getAddress())
+                .note(f.getNote())
+                .photo(f.getPhoto())
                 .deleted(false)
                 .build();
 
@@ -93,8 +98,11 @@ public class CustomerServiceImpl implements CustomerService {
         c.setName(f.getName());
         c.setPhone(f.getPhone());
         c.setEmail(f.getEmail());
-        c.setMemberType(MemberType.valueOf(f.getMemberType()));
+        c.setMemberType(f.getMemberType() != null ? f.getMemberType() : MemberType.MOI);
         c.setPoint(f.getPoint() == null ? 0 : f.getPoint());
+        c.setAddress(f.getAddress());
+        c.setNote(f.getNote());
+        c.setPhoto(f.getPhoto());
         c.updateMemberTypeByPoints();
         repo.save(c);
     }
@@ -206,9 +214,4 @@ public class CustomerServiceImpl implements CustomerService {
     public long countByMemberType(MemberType memberType) {
         return repo.countByDeletedFalseAndMemberType(memberType);
     }
-    @Override
-    public Optional<Customer> getById(Long id) {
-        return customerRepository.findById(id);
-    }
-
 }
